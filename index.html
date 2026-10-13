@@ -1,0 +1,1334 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Seguimiento de clientes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: panel de clientes (alta + lista) arriba; al entrar a un club, su planilla de partidos por mes */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --fg:#141a26; --muted:#5b6475; --line:#dde2eb;
+  --accent:#1d3fa6; --accent-soft:#e3e9f8; --hero:#10204f; --on-hero:#ffffff; --on-accent:#ffffff;
+  --ok:#1b7a44; --ok-soft:#e1f2e8; --hoy:#15803d; --hoy-soft:#dcfce7; --man:#c2410c; --man-soft:#ffedd5; --on-dia:#ffffff; --warn:#9a6200; --warn-soft:#fbefd6; --bad:#b3261e; --bad-soft:#f9e1df;
+  --s-cer:#1b7a44; --s-dem:#6d3fc0; --s-pre:#b55a00; --s-con:#1d5fbf; --s-esp:#0b7f8c; --s-bus:#8a6a00; --s-otr:#b3261e; --s-non:#5b6475;
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c111c; --surface:#141b2b; --fg:#e6eaf2; --muted:#96a0b4; --line:#26304a;
+  --accent:#7f9cf5; --accent-soft:#1c2748; --hero:#1d3fa6; --on-hero:#ffffff; --on-accent:#0c111c;
+  --ok:#6fd49a; --ok-soft:#14301f; --hoy:#4ade80; --hoy-soft:#0f2e1b; --man:#fb923c; --man-soft:#3a2210; --on-dia:#0c111c; --s-cer:#6fd49a; --s-dem:#b79cf5; --s-pre:#f5a65b; --s-con:#86b4f5; --s-esp:#5fd3df; --s-bus:#e8c75a; --s-otr:#f28b82; --s-non:#96a0b4; --warn:#f0c064; --warn-soft:#352812; --bad:#f28b82; --bad-soft:#3a1a18; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c111c; --surface:#141b2b; --fg:#e6eaf2; --muted:#96a0b4; --line:#26304a;
+  --accent:#7f9cf5; --accent-soft:#1c2748; --hero:#1d3fa6; --on-hero:#ffffff; --on-accent:#0c111c;
+  --ok:#6fd49a; --ok-soft:#14301f; --hoy:#4ade80; --hoy-soft:#0f2e1b; --man:#fb923c; --man-soft:#3a2210; --on-dia:#0c111c; --s-cer:#6fd49a; --s-dem:#b79cf5; --s-pre:#f5a65b; --s-con:#86b4f5; --s-esp:#5fd3df; --s-bus:#e8c75a; --s-otr:#f28b82; --s-non:#96a0b4; --warn:#f0c064; --warn-soft:#352812; --bad:#f28b82; --bad-soft:#3a1a18; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1480px;margin:0 auto;padding-inline:clamp(16px,4vw,56px);padding-block:28px 56px;display:grid;gap:26px}
+header{display:grid;gap:6px}
+.eyebrow{font:600 12px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 clamp(34px,6vw,48px)/1 var(--f-display);margin:0;text-wrap:balance;letter-spacing:.01em;text-transform:uppercase}
+.sub{color:var(--muted);margin:0;max-width:64ch}
+h2{font:600 22px/1.1 var(--f-display);text-transform:uppercase;letter-spacing:.04em;margin:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h2 small{font:500 13px var(--f-body);text-transform:none;letter-spacing:0;color:var(--muted)}
+a{color:var(--accent)}
+
+/* Alta de cliente */
+.add{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:14px}
+.addrow{display:grid;grid-template-columns:1.4fr 1fr .7fr auto;gap:10px;align-items:end}
+select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%;box-sizing:border-box}
+select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:600 13px var(--f-body);padding:7px 12px;border:0;background:var(--surface);color:var(--fg);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.lang{font:600 10px/1 var(--f-body);letter-spacing:.08em;padding:3px 6px;border-radius:4px;background:var(--accent-soft);color:var(--accent);vertical-align:middle;margin-left:6px}
+.fld{display:grid;gap:5px;min-width:0}
+.fld label,.lab{font:600 12px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input[type=text],input[type=email],input[type=password]{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%;box-sizing:border-box}
+input[type=text]:focus-visible,input[type=email]:focus-visible,input[type=password]:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.verdict{border-radius:10px;padding:14px;display:grid;gap:10px}
+.verdict.ok{background:var(--ok-soft)} .verdict.no{background:var(--warn-soft)} .verdict.info{background:var(--bg);border:1px solid var(--line)}
+.verdict .h{font:600 17px/1.2 var(--f-display);text-transform:uppercase;letter-spacing:.03em}
+.verdict.ok .h{color:var(--ok)} .verdict.no .h{color:var(--warn)}
+.verdict p{margin:0}
+.sugg{display:flex;flex-wrap:wrap;gap:8px}
+
+/* Lista de clientes */
+.clients{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.client{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:10px;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+.client:hover{border-color:var(--accent)}
+.client:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.client .n{font:700 22px/1.05 var(--f-display);text-transform:uppercase;letter-spacing:.02em}
+.client .p{font-size:13px;color:var(--muted)}
+.client .nx{font-size:14px;border-top:1px solid var(--line);padding-top:10px;display:grid;gap:2px}
+.client .nx b{font-weight:600}
+.client .foot{display:flex;flex-wrap:wrap;gap:6px;align-items:center;align-content:flex-start}
+.clients:not(.list) .client{align-content:start}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.clients.list{grid-template-columns:1fr;gap:10px}
+.clients.list .client{grid-template-columns:minmax(200px,1.2fr) minmax(220px,1.5fr) minmax(160px,1fr);align-items:center;gap:16px;padding:14px 18px;border-left:4px solid var(--line)}
+.clients.list .client.st-pend{border-left-color:var(--warn)}
+.clients.list .client.st-ok{border-left-color:var(--ok)}
+.clients.list .client.st-curso{border-left-color:var(--accent)}
+.clients.list .client:hover{border-color:var(--accent);border-left-color:var(--accent)}
+.clients.list .client .n{font-size:18px}
+.clients.list .client .nx{border-top:0;padding-top:0}
+.clients.list .client .foot{justify-content:flex-end}
+.clients.list .lhead{display:grid;grid-template-columns:minmax(200px,1.2fr) minmax(220px,1.5fr) minmax(160px,1fr);gap:16px;padding:0 22px 0 22px;font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.clients.list .lhead span:last-child{text-align:right}
+@media (max-width:700px){.clients.list .client{grid-template-columns:1fr;gap:6px}.clients.list .client .foot{justify-content:flex-start}.clients.list .lhead{display:none}}
+
+/* Detalle */
+.back{justify-self:start;font:600 14px var(--f-body);background:none;border:0;color:var(--accent);cursor:pointer;padding:4px 0}
+.back:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@keyframes pulsoHoy{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--hoy) 55%,transparent)}70%{box-shadow:0 0 0 10px color-mix(in srgb,var(--hoy) 0%,transparent)}100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--hoy) 0%,transparent)}}
+@keyframes latido{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.45}}
+@keyframes brilloHoy{0%,100%{border-color:var(--hoy)}50%{border-color:color-mix(in srgb,var(--hoy) 45%,var(--line))}}
+.dia-hoy{border:2px solid var(--hoy)!important;background:color-mix(in srgb,var(--hoy) 7%,var(--surface))!important;animation:pulsoHoy 2s ease-out infinite,brilloHoy 2s ease-in-out infinite}
+.dia-man{border:2px solid var(--man)!important;background:color-mix(in srgb,var(--man) 7%,var(--surface))!important}
+.clients.list .client.dia-hoy{border-left:6px solid var(--hoy)!important}
+.clients.list .client.dia-man{border-left:6px solid var(--man)!important}
+.badge-dia{display:inline-flex;align-items:center;gap:6px;font:700 11px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:99px;white-space:nowrap;width:max-content}
+.badge-dia.hoy{background:var(--hoy);color:var(--on-dia)}
+.badge-dia.man{background:var(--man);color:var(--on-dia)}
+.badge-dia .pt{width:7px;height:7px;border-radius:50%;background:currentColor}
+.badge-dia.hoy .pt{animation:latido 1.2s ease-in-out infinite}
+.next.dia-hoy{background:linear-gradient(135deg,color-mix(in srgb,var(--hoy) 85%,#000),var(--hero))!important;border-color:var(--hoy)!important}
+.next.dia-man{background:linear-gradient(135deg,color-mix(in srgb,var(--man) 80%,#000),var(--hero))!important;border-color:var(--man)!important}
+@media (prefers-reduced-motion:reduce){.dia-hoy,.badge-dia.hoy .pt{animation:none!important}}
+.next{background:var(--hero);color:var(--on-hero);border-radius:14px;padding:22px;display:grid;gap:14px}
+.next .lbl{font:600 12px var(--f-body);letter-spacing:.12em;text-transform:uppercase;opacity:.8}
+.next .vs{font:700 clamp(28px,5vw,40px)/1.05 var(--f-display);text-transform:uppercase}
+.next .meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;opacity:.92}
+.next .count{font:500 13px var(--f-mono);background:rgba(255,255,255,.16);padding:4px 10px;border-radius:99px;justify-self:start}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:2px}
+.stat b{font:700 28px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.month{display:grid;gap:12px}
+#vDetail .month,#vDetail .summary,#vDetail .next{max-width:1100px}
+.sched,.add{max-width:none}
+.list{display:grid;gap:10px}
+.match{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:74px 1fr auto;gap:14px;align-items:center;padding:14px 16px;cursor:pointer;width:100%;background:none;border:0;color:inherit;font:inherit;text-align:left}
+.row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.date{display:grid;justify-items:center;border-right:1px solid var(--line);padding-right:12px}
+.date .d{font:700 30px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.date .m{font:600 11px var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.date .q{font:600 22px/1 var(--f-display);color:var(--muted)}
+.info{min-width:0;display:grid;gap:3px}
+.info .t{font:600 20px/1.15 var(--f-display);text-transform:uppercase;letter-spacing:.02em}
+.info .c{font-size:13px;color:var(--muted)}
+.right{display:grid;justify-items:end;gap:6px}
+.score{font:700 24px/1 var(--f-mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.chip{font:600 11px/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:99px;white-space:nowrap}
+.c-pend{background:var(--warn-soft);color:var(--warn)}
+.c-env{background:var(--accent-soft);color:var(--accent)}
+.c-ok{background:var(--ok-soft);color:var(--ok)}
+.c-bad{background:var(--bad-soft);color:var(--bad)}
+.c-mute{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.r-G{color:var(--ok)} .r-E{color:var(--warn)} .r-P{color:var(--bad)}
+.detail{border-top:1px solid var(--line);padding:16px;display:grid;gap:14px}
+.detail p{margin:0}
+.field{display:grid;gap:6px}
+.seg-steps{list-style:none;margin:0;padding:0;display:grid;gap:0;counter-reset:st}
+.seg-steps>li{position:relative;display:grid;grid-template-columns:28px 1fr;gap:12px;padding-bottom:16px}
+.seg-steps>li:last-child{padding-bottom:0}
+.seg-steps>li::before{content:"";position:absolute;left:13px;top:28px;bottom:2px;width:2px;background:var(--line)}
+.seg-steps>li:last-child::before{display:none}
+.seg-steps .dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:700 13px var(--f-body);background:var(--bg);border:2px solid var(--line);color:var(--muted);z-index:1}
+.seg-steps li.done .dot{background:var(--ok);border-color:var(--ok);color:#fff}
+.seg-steps li.closed .dot{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+.seg-steps li.off{opacity:.55}
+.seg-steps .sb{display:grid;gap:6px;min-width:0}
+.seg-steps .sh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.seg-steps .sh b{font-weight:600}
+.seg-steps .sh span{font-size:13px;color:var(--muted)}
+.seg-steps .txt{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.seg-steps textarea{min-height:56px}
+.seg-steps .btns{display:flex;flex-wrap:wrap;gap:6px}
+.seg-steps .lnk{all:unset;cursor:pointer;font-size:13px;color:var(--accent)}
+.seg-steps .lnk:hover{text-decoration:underline}
+.seg-steps .lnk:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+textarea{width:100%;box-sizing:border-box;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:92px;resize:vertical}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button.b{font:600 14px var(--f-body);padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+button.b:hover{border-color:var(--accent)}
+button.b.primary,button.b[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+button.b.danger{color:var(--bad)}
+button.b:disabled{opacity:.55;cursor:default}
+button.b:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.status{font-size:13px;color:var(--muted);min-height:1.2em}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:22px;color:var(--muted)}
+footer{font-size:13px;color:var(--muted)}
+@media (max-width:620px){ .addrow{grid-template-columns:1fr} }
+@media (max-width:520px){
+  .row{grid-template-columns:58px 1fr}
+  .right{grid-column:2;justify-items:start;grid-auto-flow:column;align-items:center}
+  .date .d{font-size:26px}
+}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{font:600 15px var(--f-body);padding:10px 14px;background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-1px;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.sched{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.st{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:4px;align-content:start}
+.st .when{font:500 12px var(--f-mono);color:var(--accent)}
+.st .what{font:600 19px/1.1 var(--f-display);text-transform:uppercase;letter-spacing:.03em}
+.st p{margin:0;font-size:14px;color:var(--muted)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.ctable{border-collapse:collapse;width:100%;min-width:900px;font-size:14px}
+.ctable th{font:600 11px/1.3 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:bottom}
+.ctable th.c{width:1%;white-space:normal;min-width:84px}
+.ctable td.club{white-space:nowrap}
+.ctable td.nw{white-space:nowrap}
+.ctable td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.ctable tr:last-child td{border-bottom:0}
+.ctable .c{text-align:center}
+.ctable td.num{font-variant-numeric:tabular-nums;text-align:center}
+.ctable select{padding:6px 8px;width:auto}
+.ctable input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
+.linkbtn{background:none;border:0;padding:0;font:600 15px var(--f-body);color:var(--accent);cursor:pointer;text-align:left}
+.linkbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.addrow5{grid-template-columns:1.4fr 1fr 1fr 1fr auto auto}
+@media (max-width:760px){.addrow5{grid-template-columns:1fr 1fr}.addrow5 .fld:first-child{grid-column:1/-1}}
+.sportbar{display:inline-flex;flex-wrap:wrap;justify-self:start;max-width:100%}
+.sportbar button b{font-variant-numeric:tabular-nums;margin-left:6px;opacity:.75;font-weight:600}
+.vtable tr.grp td .dv{color:var(--fg);margin-right:8px}
+.vtable tr.grp td{padding:0}
+.grpbtn{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;padding:10px;cursor:pointer;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit}
+.grpbtn:hover{color:var(--fg)}
+.grpbtn:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.grpbtn .chev{display:inline-block;width:12px;transition:transform .15s;font-size:11px}
+.grpbtn[aria-expanded="false"] .chev{transform:rotate(-90deg)}
+.ic{min-height:22px;padding:3px 6px;margin:-3px -6px;border-radius:6px;white-space:pre-wrap;overflow-wrap:anywhere;outline:none;border:1px solid transparent;cursor:text}
+.ic:hover{border-color:var(--line)}
+.ic:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent)}
+.ic:empty::before{content:"—";color:var(--muted)}
+.ic:focus:empty::before{content:""}
+.ic.saved{border-color:color-mix(in srgb,var(--ok) 60%,transparent)}
+.idate{font:inherit;font-size:13px;color:var(--fg);background:transparent;border:1px solid transparent;border-radius:6px;padding:3px 4px;margin:-3px -4px;width:128px;color-scheme:light dark}
+.idate:hover{border-color:var(--line)}.idate:focus{border-color:var(--accent);outline:none}
+.idate.empty:not(:focus)::-webkit-datetime-edit{opacity:0}
+.idate.empty:not(:focus){opacity:.55}
+.idate.saved{border-color:color-mix(in srgb,var(--ok) 60%,transparent)}
+.vtable td.ed{min-width:150px}
+.vtable td.cct{min-width:220px;max-width:300px}
+#ccPanel li .cg{grid-column:1;font-size:12px;color:var(--muted)}
+#ccPanel form select{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+.vt-collapse{display:flex;gap:6px;margin-left:auto}
+.flab{font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ccbtn{all:unset;box-sizing:border-box;display:flex;align-items:flex-start;gap:6px;width:100%;min-height:26px;padding:3px 6px;margin:-3px -6px;border-radius:6px;border:1px solid transparent;cursor:pointer;color:var(--fg);font:inherit;line-height:1.35}
+.ccbtn:hover{border-color:var(--line)}
+.ccbtn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.ccbtn[aria-expanded="true"]{border-color:var(--accent);background:var(--surface)}
+.ccbtn .cn{flex:1;min-width:0;overflow-wrap:anywhere}
+.ccbtn .cn small{display:block;color:var(--muted);font-size:12px}
+.ccbtn .more{font:600 11px var(--f-body);color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);border-radius:99px;padding:1px 7px;white-space:nowrap;margin-top:1px}
+.ccbtn .car{color:var(--muted);font-size:10px;margin-top:3px;opacity:.45}
+.ccbtn:hover .car,.ccbtn[aria-expanded="true"] .car{opacity:1}
+.ccbtn .cn .muted{color:var(--muted)}
+#ccPanel{position:absolute;z-index:50;width:min(340px,calc(100vw - 32px));background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.28);padding:14px;display:grid;gap:12px}
+#ccPanel .ch{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+#ccPanel .ch b{font:600 12px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+#ccPanel .ch span{font-size:13px;color:var(--muted)}
+#ccPanel ul{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-height:260px;overflow:auto}
+#ccPanel li{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+#ccPanel li .nm{font-weight:600;overflow-wrap:anywhere}
+#ccPanel li .ln{grid-column:1;display:flex;flex-wrap:wrap;gap:4px 10px;font-size:13px}
+#ccPanel li .ln a{color:var(--accent);text-decoration:none}
+#ccPanel li .ln a:hover{text-decoration:underline}
+#ccPanel li .ac{grid-column:2;grid-row:1/span 2;display:flex;gap:2px;align-items:flex-start}
+#ccPanel li .ac button{all:unset;cursor:pointer;color:var(--muted);padding:2px 6px;border-radius:6px;font-size:14px}
+#ccPanel li .ac button:hover{color:var(--fg);background:var(--surface)}
+#ccPanel li .ac button:focus-visible{outline:2px solid var(--accent)}
+#ccPanel form{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+#ccPanel form input{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;box-sizing:border-box}
+#ccPanel form .row{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+#ccPanel .empty2{font-size:14px;color:var(--muted)}
+.vt-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.vt-filters input[type=text]{max-width:260px}
+.vt-filters select{width:auto}
+.stchip{--c:var(--s-non);font:600 12px/1 var(--f-body);padding:6px 10px;border-radius:99px;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c);cursor:pointer;white-space:nowrap}
+.stchip[aria-pressed="true"]{background:var(--c);color:var(--bg);border-color:var(--c)}
+.stchip b{font-variant-numeric:tabular-nums;margin-left:4px}
+.vtable{border-collapse:collapse;width:100%;min-width:1000px;font-size:13.5px}
+.vtable th{font:600 11px/1.3 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:bottom;position:sticky;top:0;background:var(--surface)}
+.vtable td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.vtable tr.vrow td:first-child{border-left:4px solid var(--c,var(--s-non))}
+.vtable tr.vrow:hover td{background:color-mix(in srgb,var(--c,var(--s-non)) 6%,transparent)}
+.vtable tr.grp td{background:var(--bg);font:600 13px var(--f-display);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:10px}
+.vtable td.eq{white-space:nowrap}
+.vtable td.info{display:table-cell;min-width:240px;max-width:380px;color:var(--fg)}
+.vtable td.num{text-align:center;font-variant-numeric:tabular-nums}
+.vtable select.stsel{--c:var(--s-non);font:600 12px var(--f-body);padding:5px 6px;border-radius:6px;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);background:color-mix(in srgb,var(--c) 14%,var(--surface));color:var(--c);width:auto}
+.vtable .muted{color:var(--muted)}
+.rdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-left:6px;vertical-align:middle}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.pgrid .fld textarea{min-height:64px}
+.rcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:14px}
+.rcard dl{display:grid;grid-template-columns:minmax(140px,max-content) 1fr;gap:6px 16px;margin:0}
+.rcard dt{font:600 12px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rcard dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.rcard ul{margin:0;padding-left:18px;display:grid;gap:4px}
+@media (max-width:620px){.rcard dl{grid-template-columns:1fr}}
+</style>
+<style>
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,system-ui)}
+#login{min-height:100vh;display:grid;place-items:center;padding:24px 16px;box-sizing:border-box}
+#login .card{width:min(400px,100%);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:26px;display:grid;gap:14px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+#login h1{margin:0;font-size:34px}
+#login .eyebrow{margin:0}
+#login input{width:100%;box-sizing:border-box}
+#login .lg-links{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
+#login .lg-links a{color:var(--accent)}
+.lg-msg{font-size:14px;margin:0}
+.lg-msg.bad{color:var(--bad)} .lg-msg.ok{color:var(--ok)}
+#userbar{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+#userbar .b{padding:6px 10px;font-size:13px}
+#usersList select{width:auto;min-width:150px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="sb-shim.js"></script>
+</head>
+<body>
+<div id="login" hidden>
+  <form class="card" id="lgForm" autocomplete="on">
+    <div class="eyebrow">Fulcrum · Seguimiento</div>
+    <h1 id="lgTitle">Entrar</h1>
+    <div class="fld" id="lgEmailRow"><label for="lgEmail">Email</label><input type="email" id="lgEmail" autocomplete="username" required></div>
+    <div class="fld" id="lgPassRow"><label for="lgPass">Contraseña</label><input type="password" id="lgPass" autocomplete="current-password"></div>
+    <button class="b primary" type="submit" id="lgBtn">Entrar</button>
+    <p class="lg-msg" id="lgMsg" role="status"></p>
+    <div class="lg-links" id="lgLinks">
+      <a href="#" data-lgmode="entrar">Ya tengo cuenta</a>
+      <a href="#" data-lgmode="crear">Crear cuenta</a>
+      <a href="#" data-lgmode="olvido">Olvidé mi contraseña</a>
+    </div>
+    <button class="b" type="button" id="lgOut" hidden>Usar otra cuenta</button>
+  </form>
+</div>
+<div id="app" hidden>
+
+
+<div class="wrap">
+  <div class="verdict info" id="accessNote" role="status" hidden style="margin-bottom:18px"></div>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Secciones" hidden>
+    <button type="button" role="tab" data-tab="ventas">Ventas</button>
+    <button type="button" role="tab" data-tab="">Soporte</button>
+    <button type="button" role="tab" data-tab="config" id="tabConfig">Configuración</button>
+    <span id="userbar" hidden><span id="whoami"></span><button class="b" type="button" id="btnSalir">Salir</button></span>
+  </nav>
+
+  <!-- Vista: ventas -->
+  <div id="vVentas" style="display:grid;gap:26px" hidden>
+    <header>
+      <div class="eyebrow">Prospectos y contactos</div>
+      <h1>Ventas</h1>
+      <p class="sub">El seguimiento comercial de cada club: con quién hablamos, en qué estado está y qué sabemos de ellos. Al agregar un club, Claude investiga en internet su información relevante.</p>
+    </header>
+    <form class="add" id="vAddForm" autocomplete="off">
+      <div class="lab">Agregar club o cliente potencial</div>
+      <div class="addrow addrow5">
+        <div class="fld"><label for="vEquipo">Equipo</label><input type="text" id="vEquipo" placeholder="Ej. Real Zaragoza" required></div>
+        <div class="fld"><label for="vPais">País</label><input type="text" id="vPais" placeholder="Ej. España" required></div>
+        <div class="fld"><label for="vDep">Deporte</label><input type="text" id="vDep" list="vDepList" value="Fútbol" required></div>
+        <div class="fld"><label for="vLiga">Liga (opcional)</label><input type="text" id="vLiga" list="vLigaList" placeholder="Ej. Segunda División"></div>
+        <button class="b primary" type="submit" id="vBtnValidar">Validar</button>
+        <button class="b" type="button" id="vBtnDirecto">Solo agregar</button>
+      </div>
+      <div id="vVerdict" hidden></div>
+    </form>
+    <section style="display:grid;gap:12px">
+      <h2>Seguimiento <small id="vCount"></small></h2>
+      <div class="seg sportbar" id="vDeportes" role="group" aria-label="Deporte"></div>
+      <datalist id="vDepList"></datalist><datalist id="vLigaList"></datalist>
+      <div class="vt-filters">
+        <input type="text" id="vBuscar" placeholder="Buscar club, persona o nota" aria-label="Buscar">
+        <select id="vFiltroPais" aria-label="Filtrar por país"></select>
+        <span id="vStChips" class="vt-filters"></span>
+        <span class="vt-collapse"><button type="button" class="b" id="vExpandAll">Expandir todo</button><button type="button" class="b" id="vCollapseAll">Contraer todo</button></span>
+      </div>
+      <div class="tablewrap" id="vTableWrap"><table class="vtable">
+        <thead><tr><th>Equipo</th><th>Último contacto</th><th>Status</th><th>Información</th><th>Contactos</th></tr></thead>
+        <tbody id="vRows"></tbody>
+      </table></div>
+      <div class="status" id="vStatus"></div>
+    </section>
+  </div>
+
+  <!-- Vista: ficha de prospecto -->
+  <div id="vProspect" style="display:grid;gap:22px" hidden>
+    <button class="back" id="pBack" type="button">← Ventas</button>
+    <header>
+      <div class="eyebrow" id="pPais"></div>
+      <h1 id="pNombre"></h1>
+      <p class="sub" id="pLiga"></p>
+    </header>
+    <form class="add" id="pForm" autocomplete="off">
+      <div class="lab">Datos del seguimiento</div>
+      <div class="pgrid">
+        <div class="fld"><label for="pf-equipo">Equipo</label><input type="text" id="pf-equipo"></div>
+        <div class="fld"><label for="pf-pais">País</label><input type="text" id="pf-pais"></div>
+        <div class="fld"><label for="pf-deporte">Deporte</label><input type="text" id="pf-deporte" list="vDepList"></div>
+        <div class="fld"><label for="pf-liga">Liga</label><input type="text" id="pf-liga" list="vLigaList"></div>
+        <div class="fld"><label for="pf-nivel">División</label><select id="pf-nivel"><option value="0">Federación</option><option value="1">1ª división</option><option value="2">2ª división</option><option value="3">3ª división</option><option value="9">Otras categorías</option></select></div>
+        <div class="fld"><label for="pf-provincia">Provincia</label><input type="text" id="pf-provincia"></div>
+        <div class="fld"><label for="pf-licencias">Licencias</label><input type="text" id="pf-licencias" inputmode="numeric"></div>
+        <div class="fld"><label for="pf-status">Status</label><select id="pf-status"></select></div>
+        <div class="fld"><label for="pf-ultimo">Último contacto</label><input type="date" id="pf-ultimo" style="font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 12px"></div>
+        <div class="fld"><span class="flab">Contactos</span><div id="pc-contactos"></div></div>
+      </div>
+      <div class="fld"><label for="pf-info">Información y notas</label><textarea id="pf-info" style="min-height:96px"></textarea></div>
+      <div class="btns"><button class="b primary" type="submit">Guardar cambios</button><span class="status" id="pStatus"></span></div>
+    </form>
+    <section style="display:grid;gap:12px">
+      <h2>Investigación <small id="pResFecha"></small></h2>
+      <div class="tools">
+        <button class="b" type="button" id="pInvestigar" hidden>Investigar ahora</button>
+        <button class="b" type="button" id="pACliente" hidden>Pasar a Soporte</button>
+        <button class="b danger" type="button" id="pQuitar" hidden>Quitar de ventas</button>
+        <span class="status" id="pToolStatus"></span>
+      </div>
+      <div id="pRes"></div>
+    </section>
+  </div>
+
+  <!-- Vista: lista de clientes -->
+  <div id="vList" style="display:grid;gap:26px">
+    <header>
+      <div class="eyebrow">Seguimiento semanal</div>
+      <h1>Soporte</h1>
+      <p class="sub">Carga los clubes a los que les haces seguimiento. Cada lunes Claude revisa cuándo juegan y cómo salieron, y deja listo el mensaje para escribirles.</p>
+    </header>
+
+    <form class="add" id="addForm" autocomplete="off">
+      <div class="lab">Agregar cliente</div>
+      <div class="addrow">
+        <div class="fld"><label for="inEquipo">Equipo</label><input type="text" id="inEquipo" placeholder="Ej. Independiente del Valle" required></div>
+        <div class="fld"><label for="inPais">País</label><input type="text" id="inPais" placeholder="Ej. Ecuador" required></div>
+        <div class="fld"><label for="inIdioma">Idioma</label><select id="inIdioma"><option value="es">Español</option><option value="en">Inglés</option></select></div>
+        <button class="b primary" id="btnValidar" type="submit">Validar</button>
+      </div>
+      <div id="verdict" hidden></div>
+    </form>
+
+
+    <section style="display:grid;gap:12px">
+      <h2>Tus clientes <small id="countLbl"></small></h2>
+      <div class="vt-filters" id="cliCtl">
+        <label class="sr" for="cliOrden">Ordenar</label>
+        <select id="cliOrden" aria-label="Ordenar clientes"><option value="az">Orden: A–Z</option><option value="prox">Orden: próximo partido</option></select>
+        <span id="cliChips" class="vt-filters"></span>
+        <span class="seg" role="group" aria-label="Vista" style="margin-left:auto"><button type="button" data-cv="grid">Cuadrícula</button><button type="button" data-cv="list">Lista</button></span>
+      </div>
+      <div id="clients" class="clients"><div class="empty">Aquí aparecerán tus clientes. Agrega el primero con el formulario de arriba.</div></div>
+    </section>
+  </div>
+
+  <!-- Vista: configuración (solo el dueño) -->
+  <div id="vConfig" style="display:grid;gap:26px" hidden>
+    <header>
+      <div class="eyebrow">Ajustes</div>
+      <h1>Configuración</h1>
+      <p class="sub">Las revisiones automáticas, en qué participa cada cliente y quién recibe el correo diario.</p>
+    </header>
+
+    <section style="display:grid;gap:12px">
+      <h2>Tareas automáticas <small>hora de Madrid</small></h2>
+      <div class="sched">
+        <div class="st"><div class="when">Lunes · 8:53, y al agregar un cliente</div><div class="what">Revisión semanal</div><p>Busca los partidos de la semana pasada y de las próximas 3 semanas, carga resultados, deja los mensajes listos y los agrega al calendario.</p></div>
+        <div class="st"><div class="when">Todos los días · 7:51</div><div class="what">Correo diario</div><p>Carga los resultados de la noche y envía desde tu Gmail el resumen de lo que hay que hacer a los destinatarios de abajo.</p></div>
+        <div class="st"><div class="when">Todos los días · 13:51</div><div class="what">Recordatorio</div><p>Si pasaron 6 horas sin que uses la página y quedan mensajes por enviar, te avisa por correo a juan.traverso@fulcrumtec.com.</p></div>
+        <div class="st"><div class="when">Solo el día de partido · mañana, −3 h y −1 h</div><div class="what">Alertas de partido</div><p>El día que juega un cliente te llega un aviso a la mañana (8:47) con los partidos del día, otro 3 horas antes y otro 1 hora antes de cada partido. Se programan solas cada día para los partidos nuevos; los días sin partido no llega nada.</p></div>
+        <div class="st"><div class="when">Todos los días · 9:09 y 20:09</div><div class="what">Calendario Fulcrum Soporte</div><p>Crea los partidos nuevos en el calendario y actualiza fecha, hora y resultado de los que cambian, sin duplicar.</p></div>
+        <div class="st"><div class="when">Todos los días · 6:41 y 14:41, y al agregar un club</div><div class="what">Investigación de ventas</div><p>Busca en internet la información relevante de los clubes de Ventas (staff, tecnología, noticias, contacto) de a 10 por vez, y la renueva cada 30 días.</p></div>
+      </div>
+    </section>
+
+    <section style="display:grid;gap:12px">
+      <h2>Clientes <small id="cfgCount"></small></h2>
+      <p class="sub" style="font-size:14px">Desmarca una tarea para que ese cliente no entre en ella. Los cambios se guardan al instante.</p>
+      <div class="tablewrap"><table class="ctable">
+        <thead><tr><th>Club</th><th>País</th><th>Liga</th><th>Idioma</th><th class="c">Revisión<br>semanal</th><th class="c">Correo<br>diario</th><th class="c">Recorda&shy;torio</th><th class="c">Día de<br>partido</th><th class="c">Por<br>escribir</th><th>Próximo partido</th><th>Alta</th></tr></thead>
+        <tbody id="cfgRows"></tbody>
+      </table></div>
+      <div class="status" id="cfgStatus"></div>
+    </section>
+
+    <section class="add" id="mailBox">
+      <h2 style="margin:0">Correo diario <small>destinatarios</small></h2>
+      <p class="sub" style="font-size:14px">Cada mañana se envía desde tu Gmail el resumen con lo que hay que hacer, a quién escribir y quién juega. Estas direcciones lo reciben:</p>
+      <div class="sugg" id="mailList"></div>
+      <form class="addrow" id="mailForm" style="grid-template-columns:1fr auto" autocomplete="off">
+        <div class="fld"><label for="inMail">Agregar destinatario</label><input type="text" id="inMail" inputmode="email" placeholder="nombre@empresa.com"></div>
+        <button class="b" type="submit">Agregar</button>
+      </form>
+      <div class="status" id="mailStatus"></div>
+      <p class="sub" style="font-size:13px">El recordatorio de las 13:51 llega siempre a juan.traverso@fulcrumtec.com, sin importar esta lista.</p>
+    </section>
+    <section class="add" id="usersBox" style="display:grid;gap:12px" hidden>
+      <div class="lab">Usuarios con acceso</div>
+      <p class="sub" style="font-size:14px;margin:0">Agrega el email de la persona y su rol. Después, esa persona entra a la página, toca <b>Crear cuenta</b> con ese mismo email y elige su contraseña. <b>Administrador</b>: todo, incluidos los usuarios. <b>Editor</b>: todo menos usuarios. <b>Lector</b>: solo ver.</p>
+      <div id="usersList" style="display:grid;gap:6px"></div>
+      <form class="addrow" id="userForm" style="grid-template-columns:1fr 160px auto" autocomplete="off">
+        <div class="fld"><label for="inUser">Email</label><input type="email" id="inUser" placeholder="nombre@empresa.com" required></div>
+        <div class="fld"><label for="inRol">Rol</label><select id="inRol"><option value="editor">Editor</option><option value="lector">Lector</option><option value="admin">Administrador</option></select></div>
+        <button class="b" type="submit">Agregar</button>
+      </form>
+      <div class="status" id="userStatus"></div>
+    </section>
+  </div>
+
+  <!-- Vista: detalle de un cliente -->
+  <div id="vDetail" style="display:grid;gap:26px" hidden>
+    <button class="back" id="btnBack" type="button">← Soporte</button>
+    <header>
+      <div class="eyebrow" id="dPais"></div>
+      <h1 id="dNombre"></h1>
+      <p class="sub" id="dLiga"></p>
+    </header>
+    <div class="tools"><span class="lab">Mensajes al club</span>
+      <div class="seg" role="group" aria-label="Idioma de los mensajes"><button type="button" data-lang="es">Español</button><button type="button" data-lang="en">Español + inglés</button></div>
+      <span class="status" id="langStatus"></span></div>
+    <section id="next" class="next" aria-live="polite"></section>
+    <section class="summary" id="summary" aria-label="Resumen"></section>
+    <div class="tools">
+      <button class="b" id="btnUpdate" type="button" hidden>Buscar partidos ahora</button>
+      <button class="b danger" id="btnRemove" type="button">Quitar cliente</button>
+      <span class="status" id="toolStatus"></span>
+    </div>
+    <div id="months"></div>
+  </div>
+
+  <footer>Horarios en hora local del club. Las fechas “a confirmar” dependen de la programación oficial de cada liga.</footer>
+</div>
+
+<script>
+const TRIGGER_ID="trig_018yghohRK5uAqZ8YEuigPne";
+const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const CONTACTO={pendiente:["Por escribir","c-pend"],enviado:["Mensaje enviado","c-env"],respondio:["Respondieron","c-ok"],no_aplica:["No aplica","c-mute"]};
+/* Seguimiento de cada partido: enviado → recordatorio → respuesta → cerrado */
+function segOf(p){
+  const s=(p.seg&&typeof p.seg==="object")?{...p.seg}:{};
+  if(!p.seg){ // datos anteriores (campo contacto)
+    if(p.contacto==="enviado"||p.contacto==="respondio") s.enviado={fecha:"",nota:""};
+    if(p.contacto==="respondio") s.respuesta={fecha:"",texto:""};
+    if(p.contacto==="no_aplica") s.cerrado={fecha:"",nota:"No aplica"};
+  }
+  return s;
+}
+const segIniciado=s=>!!(s.enviado||s.recordatorio||s.respuesta||s.cerrado);
+const segAbierto=p=>{const s=segOf(p);return !s.cerrado&&(p.estado==="jugado"||segIniciado(s))};
+function segPaso(p){const s=segOf(p);
+  if(s.cerrado) return ["Cerrado","c-mute"];
+  if(s.respuesta) return ["Respondieron","c-ok"];
+  if(s.recordatorio) return ["Recordatorio enviado","c-env"];
+  if(s.enviado) return ["Mensaje enviado","c-env"];
+  return ["Sin enviar","c-pend"];
+}
+const segPend=p=>{const s=segOf(p);return p.estado==="jugado"&&!s.cerrado&&!s.enviado};
+const segEsperando=p=>{const s=segOf(p);return !s.cerrado&&!s.respuesta&&!!(s.enviado||s.recordatorio)};
+function contactoDe(s){return s.cerrado?"no_aplica":s.respuesta?"respondio":(s.enviado||s.recordatorio)?"enviado":"pendiente"}
+const fmtCorta=iso=>{if(!iso)return "";try{const d=new Date(iso);return d.toLocaleDateString("es-ES",{day:"numeric",month:"short"})+" · "+d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"})}catch{return ""}};
+const segEdit={}; // key -> paso en edición
+let db=null, sample=null, mcp=null, canWrite=true;
+let clientes=[];                // [{id,...data}]
+const partidos={};              // clientId -> [{id,...}]
+const subs={};                  // clientId -> unsubscribe
+let current=null;               // clientId en detalle
+const open=new Set(), drafts={};
+let pendingValid=null, confirmRemove=false;
+
+const $=id=>document.getElementById(id);
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function parseDate(f){const [y,m,d]=String(f).split("-").map(Number);return new Date(y,(m||1)-1,d||1)}
+function resLetter(r){const m=String(r||"").match(/(\d+)\s*-\s*(\d+)/);if(!m)return"";const a=+m[1],b=+m[2];return a>b?"G":a<b?"P":"E"}
+function slug(s){return s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,60)||"cliente"}
+function today(){const t=new Date();t.setHours(0,0,0,0);return t}
+function sorted(list){return [...list].sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)))}
+function nextOf(list){const t=today();return sorted(list).find(p=>p.estado==="programado"&&(!p.fecha_confirmada||parseDate(p.fecha)>=t))}
+function diaRel(p){ if(!p||p.estado!=="programado") return null; const d=parseDate(p.fecha); const n=Math.round((d-today())/864e5); return n===0?"hoy":n===1?"man":null; }
+function badgeDia(p){const r=diaRel(p); if(!r) return ""; return `<span class="badge-dia ${r}"><span class="pt" aria-hidden="true"></span>${r==="hoy"?"Juega hoy":"Juega mañana"}${p.hora&&p.fecha_confirmada?" · "+esc(p.hora):""}</span>`}
+function whenText(p){const d=parseDate(p.fecha);return p.fecha_confirmada?`${d.getDate()} de ${MESES[d.getMonth()]}${p.hora?" · "+p.hora:""}`:`Semana del ${d.getDate()} de ${MESES[d.getMonth()]} · a confirmar`}
+
+/* ---------- Router ---------- */
+function go(id){ if(typeof cerrarContactos==="function"&&document.getElementById("ccPanel")) cerrarContactos(); current=id; confirmRemove=false; try{history.replaceState(null,"",id?"#"+id:location.pathname)}catch{} restoreY=null; renderView(); window.scrollTo(0,0); SS.set("vista",current||"");SS.set("scrollPos",{view:current||"",y:0}) }
+let isOwner=false, isAdmin=false;
+/* ---- conservar la posición: al refrescar datos y al recargar la página ---- */
+try{history.scrollRestoration="manual"}catch{}
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+let cliLoaded=false;
+const SS={get(k,d){try{const v=sessionStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}},set(k,v){try{sessionStorage.setItem(k,JSON.stringify(v))}catch{}}};
+// Vista inicial: un enlace con #… manda; si no, la última vista de esta pestaña (al recargar); si la página se abre de nuevo, Ventas.
+const vistaInicial=(()=>{const h=(location.hash||"").slice(1);if(h)return h;const v=SS.get("vista",null);return v===null?"ventas":v})();
+current=vistaInicial||null;
+SS.set("vista",vistaInicial);
+let restoreY=(()=>{const s=SS.get("scrollPos",null);return s&&s.view===vistaInicial&&s.y>0?s.y:null})();
+const restoreHasta=Date.now()+10000;
+const cancelRestore=()=>{restoreY=null};
+["wheel","touchstart","keydown","mousedown"].forEach(ev=>window.addEventListener(ev,cancelRestore,{passive:true,once:true}));
+let scrollT=null;
+window.addEventListener("scroll",()=>{clearTimeout(scrollT);scrollT=setTimeout(()=>{if(restoreY===null)SS.set("scrollPos",{view:current||"",y:Math.round(window.scrollY)})},150)},{passive:true});
+function renderView(){
+  const y=window.scrollY;
+  renderView0();
+  if(restoreY!==null){
+    const loaded=(current==="ventas"||(current||"").startsWith("v-"))?ventasLoaded:cliLoaded;
+    const alto=document.documentElement.scrollHeight;
+    if(alto>=restoreY+window.innerHeight*0.6||loaded){window.scrollTo(0,restoreY);}
+    if((loaded&&alto>=restoreY+window.innerHeight*0.6)||Date.now()>restoreHasta) restoreY=null;
+  } else if(Math.abs(window.scrollY-y)>1) window.scrollTo(0,y);
+}
+function renderView0(){
+  const cfg=current==="config"&&isAdmin;
+  const ven=current==="ventas";
+  const pid=current&&current.startsWith("v-")?current.slice(2):null;
+  const pr=pid?ventas.find(x=>x.id===pid):null;
+  const c=(cfg||ven||pid)?null:clientes.find(x=>x.id===current);
+  const inV=ven||(!!pid&&!pr&&!ventasLoaded);
+  $("vList").hidden=!!c||cfg||ven||!!pid; $("vDetail").hidden=!c; $("vConfig").hidden=!cfg;
+  $("vVentas").hidden=!ven; $("vProspect").hidden=!pr;
+  $("tabs").hidden=!!c||!!pr; $("tabConfig").hidden=!isAdmin;
+  const tab=cfg?"config":(ven||pid)?"ventas":"";
+  document.querySelectorAll("[data-tab]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===tab)));
+  if(c) renderDetail(c); else if(cfg) renderConfig(); else if(pr) renderProspect(pr); else if(ven) renderVentas(); else if(!pid) renderList();
+  if(pid&&!pr&&ventasLoaded){ current="ventas"; renderView0(); }
+}
+document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>go(b.dataset.tab||null));
+
+const TAREAS=[["semanal","Revisión semanal"],["diario","Correo diario"],["recordatorio","Recordatorio"],["partido","Día de partido"]];
+function tOn(c,k){return !(c.tareas&&c.tareas[k]===false)}
+function renderConfig(){
+  $("cfgCount").textContent=clientes.length?`${clientes.length} club${clientes.length>1?"es":""}`:"";
+  const rows=[...clientes].sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  $("cfgRows").innerHTML=rows.length?rows.map(c=>{
+    const list=partidos[c.id]||[]; const nx=nextOf(list);
+    const pend=list.filter(segPend).length;
+    const alta=c.creado?new Date(c.creado):null;
+    return `<tr>
+      <td class="club"><button class="linkbtn" type="button" data-open="${esc(c.id)}">${esc(c.nombre)}</button></td>
+      <td class="nw">${esc(c.pais)}</td><td>${esc(c.liga||"—")}</td>
+      <td><select data-idioma="${esc(c.id)}" aria-label="Idioma de ${esc(c.nombre)}"><option value="es"${c.idioma!=="en"?" selected":""}>Español</option><option value="en"${c.idioma==="en"?" selected":""}>Español + inglés</option></select></td>
+      ${TAREAS.map(([k,l])=>`<td class="c"><input type="checkbox" data-tarea="${k}" data-cid="${esc(c.id)}" aria-label="${l} para ${esc(c.nombre)}"${tOn(c,k)?" checked":""}></td>`).join("")}
+      <td class="num">${pend?`<span class="chip c-pend">${pend}</span>`:"0"}</td>
+      <td>${nx?`${esc(nx.titulo)}<br><span style="color:var(--muted);font-size:13px">${esc(whenText(nx))}</span>`:`<span style="color:var(--muted)">—</span>`}</td>
+      <td style="white-space:nowrap;color:var(--muted)">${alta?`${alta.getDate()} ${MESES[alta.getMonth()].slice(0,3)} ${alta.getFullYear()}`:"—"}</td>
+    </tr>`}).join(""):`<tr><td colspan="11" style="color:var(--muted)">Todavía no hay clientes. Agrégalos en la pestaña Soporte.</td></tr>`;
+  $("cfgRows").querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>go(b.dataset.open));
+  $("cfgRows").querySelectorAll("[data-idioma]").forEach(sel=>sel.onchange=()=>updClient(sel.dataset.idioma,{idioma:sel.value}));
+  $("cfgRows").querySelectorAll("[data-tarea]").forEach(cb=>cb.onchange=()=>{
+    const c=clientes.find(x=>x.id===cb.dataset.cid); if(!c) return;
+    const t={semanal:tOn(c,"semanal"),diario:tOn(c,"diario"),recordatorio:tOn(c,"recordatorio"),partido:tOn(c,"partido")}; t[cb.dataset.tarea]=cb.checked;
+    updClient(c.id,{tareas:t});
+  });
+}
+async function updClient(id,patch){
+  if(!db) return;
+  try{await db.collection("clientes").doc(id).update(patch);$("cfgStatus").textContent="Guardado."}
+  catch{$("cfgStatus").textContent="No se guardó. Inténtalo de nuevo."}
+}
+
+/* ---------- Lista ---------- */
+let cliOrden=LS.get("cliOrden","az"), cliVista=LS.get("cliVista","grid"), cliFiltro=LS.get("cliFiltro",null);
+const CLI_EST=[["curso","En curso","c-env"],["pend","Por escribir","c-pend"],["espera","Esperando respuesta","c-env"],["semana","Juegan esta semana","c-ok"],["aldia","Todo cerrado","c-ok"],["sinprox","Sin próximo partido","c-mute"],["sincal","Calendario pendiente","c-mute"]];
+function cliInfo(c){
+  const list=partidos[c.id]||[]; const nx=nextOf(list);
+  const pend=list.filter(segPend).length;
+  const esp=list.filter(segEsperando).length;
+  const abiertos=list.filter(segAbierto).length;
+  const last=sorted(list).filter(p=>p.estado==="jugado").pop();
+  const t=today(), en7=new Date(t); en7.setDate(t.getDate()+7);
+  const nxd=nx?parseDate(nx.fecha):null;
+  const est=new Set();
+  if(abiertos) est.add("curso"); if(pend) est.add("pend"); if(esp) est.add("espera");
+  if(list.length&&!abiertos) est.add("aldia");
+  if(nxd&&nxd>=t&&nxd<en7) est.add("semana");
+  if(list.length&&!nx) est.add("sinprox");
+  if(!list.length) est.add("sincal");
+  const key=nx?(nx.fecha+"T"+(nx.hora||"99:99")):"9999";
+  return {list,nx,pend,esp,abiertos,last,est,key};
+}
+function renderList(){
+  $("countLbl").textContent=clientes.length?`${clientes.length} club${clientes.length>1?"es":""}`:"";
+  const box=$("clients");
+  $("cliCtl").hidden=!clientes.length;
+  if(!clientes.length){box.className="clients";box.innerHTML=`<div class="empty">Aquí aparecerán tus clientes. Agrega el primero con el formulario de arriba.</div>`;return}
+  const info={}; clientes.forEach(c=>info[c.id]=cliInfo(c));
+  const counts={}; CLI_EST.forEach(([k])=>counts[k]=clientes.filter(c=>info[c.id].est.has(k)).length);
+  if(cliFiltro&&!counts[cliFiltro]&&Object.keys(partidos).length>=clientes.length){cliFiltro=null;LS.set("cliFiltro",null)}
+  $("cliChips").innerHTML=CLI_EST.filter(([k])=>counts[k]).map(([k,l])=>`<button type="button" class="stchip" style="--c:var(--${k==="pend"?"warn":k==="espera"||k==="curso"?"accent":k==="sinprox"||k==="sincal"?"muted":"ok"})" data-cf="${k}" aria-pressed="${cliFiltro===k}">${l}<b>${counts[k]}</b></button>`).join("");
+  $("cliChips").querySelectorAll("[data-cf]").forEach(b=>b.onclick=()=>{cliFiltro=cliFiltro===b.dataset.cf?null:b.dataset.cf;LS.set("cliFiltro",cliFiltro);renderList()});
+  $("cliOrden").value=cliOrden;
+  document.querySelectorAll("[data-cv]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.cv===cliVista)));
+  let L=[...clientes].filter(c=>!cliFiltro||info[c.id].est.has(cliFiltro));
+  L.sort(cliOrden==="prox"?(a,b)=>info[a.id].key.localeCompare(info[b.id].key)||a.nombre.localeCompare(b.nombre):(a,b)=>a.nombre.localeCompare(b.nombre));
+  box.className="clients"+(cliVista==="list"?" list":"");
+  const head=cliVista==="list"?`<div class="lhead" aria-hidden="true"><span>Club</span><span>Próximo partido</span><span>Estado</span></div>`:"";
+  box.innerHTML=head+(L.length?L.map(c=>{const {list,nx,pend,abiertos,last}=info[c.id];
+    const dr=diaRel(nx);
+    return `<button class="client ${pend?"st-pend":abiertos?"st-curso":list.length?"st-ok":""}${dr?" dia-"+dr:""}" data-open="${esc(c.id)}" type="button">
+      <div><div class="n">${esc(c.nombre)}${c.idioma==="en"?`<span class="lang">EN</span>`:""}</div><div class="p">${esc(c.pais)}${c.liga?" · "+esc(c.liga):""}</div></div>
+      <div class="nx">${nx?`${badgeDia(nx)}<span>Próximo: <b>${esc(nx.titulo)}</b></span><span class="p">${esc(whenText(nx))}</span>`:
+        list.length?`<span class="p">Sin partidos próximos cargados</span>`:`<span class="p">Calendario pendiente: se carga en la próxima revisión</span>`}</div>
+      <div class="foot">${abiertos?`<span class="chip c-env">${abiertos} en curso</span>`:list.length?`<span class="chip c-ok">Todo cerrado</span>`:""}${pend?`<span class="chip c-pend">${pend} por escribir</span>`:""}
+        ${last?`<span class="chip c-mute">Último: ${esc(last.resultado)}</span>`:""}</div>
+    </button>`}).join(""):`<div class="empty">Ningún cliente con ese estado.</div>`);
+  box.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>go(b.dataset.open));
+}
+$("cliOrden").addEventListener("change",()=>{cliOrden=$("cliOrden").value;LS.set("cliOrden",cliOrden);renderList()});
+document.querySelectorAll("[data-cv]").forEach(b=>b.onclick=()=>{cliVista=b.dataset.cv;LS.set("cliVista",cliVista);renderList()});
+
+/* ---------- Alta con validación ---------- */
+$("addForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const equipo=$("inEquipo").value.trim(), pais=$("inPais").value.trim();
+  if(!equipo||!pais) return;
+  const v=$("verdict"); v.hidden=false;
+  if(!sample){ pendingValid={nombre:equipo,pais,liga:""}; v.className="verdict info";
+    v.innerHTML=`<p>No puedo validar desde esta vista. ¿Lo agregas tal cual?</p><div class="btns"><button class="b primary" type="button" id="btnAdd">Agregar “${esc(equipo)}”</button></div>`;
+    $("btnAdd").onclick=()=>addClient(pendingValid); return }
+  const btn=$("btnValidar"); btn.disabled=true; v.className="verdict info"; v.innerHTML=`<p>Validando “${esc(equipo)}” en ${esc(pais)}…</p>`;
+  try{
+    const r=await sample.json(
+`Eres un verificador de clubes de fútbol. El usuario quiere hacer seguimiento del club "${equipo}" de "${pais}".
+¿Existe un club de fútbol profesional (masculino, primera o segunda división) con ese nombre (o uno muy parecido) en ese país?
+Responde SOLO con JSON con esta forma:
+{"valido": true|false, "nombre_oficial": "nombre habitual del club", "pais": "país en español", "liga": "liga en la que compite (la más reciente que conozcas)", "ciudad": "ciudad", "nota": "una frase breve en español", "sugerencias": [{"nombre":"...","pais":"..."}]}
+Si no existe o es ambiguo, valido=false y hasta 3 sugerencias de clubes reales parecidos (pueden ser de otro país si el usuario se confundió). Si es válido, sugerencias=[].`,
+      {modelTier:"default"});
+    showVerdict(r,equipo,pais);
+  }catch(err){
+    v.className="verdict no";
+    const msg=err?.code==="not_granted"||err?.code==="sampling_disabled"?"No se pudo validar porque esta página no tiene permiso para consultar a Claude.":
+      err?.code==="rate_limited"?"Demasiadas consultas seguidas. Prueba de nuevo en un rato.":"No se pudo validar ahora. Prueba de nuevo.";
+    pendingValid={nombre:equipo,pais,liga:""};
+    v.innerHTML=`<p>${msg}</p><div class="btns"><button class="b" type="button" id="btnAdd">Agregar sin validar</button></div>`;
+    $("btnAdd").onclick=()=>addClient(pendingValid);
+  }finally{btn.disabled=false}
+});
+
+function showVerdict(r,equipo,pais){
+  const v=$("verdict");
+  if(r&&r.valido){
+    pendingValid={nombre:String(r.nombre_oficial||equipo),pais:String(r.pais||pais),liga:String(r.liga||""),ciudad:String(r.ciudad||"")};
+    const dup=clientes.find(c=>c.id===idFor(pendingValid));
+    v.className="verdict ok";
+    v.innerHTML=`<div class="h">Club encontrado: ${esc(pendingValid.nombre)}</div>
+      <p>${esc(pendingValid.ciudad?pendingValid.ciudad+", ":"")}${esc(pendingValid.pais)}${pendingValid.liga?" · "+esc(pendingValid.liga):""}</p>
+      ${r.nota?`<p style="font-size:14px">${esc(r.nota)}</p>`:""}
+      <div class="btns">${dup?`<span class="status">Ya está en tu lista.</span><button class="b" type="button" id="btnGo">Ver seguimiento</button>`:
+        `<button class="b primary" type="button" id="btnAdd">Agregar cliente</button>`}<button class="b" type="button" id="btnCancel">Cancelar</button></div>`;
+    if(dup) $("btnGo").onclick=()=>go(dup.id); else $("btnAdd").onclick=()=>addClient(pendingValid);
+  } else {
+    const sg=Array.isArray(r?.sugerencias)?r.sugerencias.slice(0,3):[];
+    pendingValid={nombre:equipo,pais,liga:""};
+    v.className="verdict no";
+    v.innerHTML=`<div class="h">No encuentro “${esc(equipo)}” en ${esc(pais)}</div>
+      ${r?.nota?`<p>${esc(r.nota)}</p>`:""}
+      ${sg.length?`<div class="lab">¿Quisiste decir?</div><div class="sugg">${sg.map((s,i)=>`<button class="b" type="button" data-sg="${i}">${esc(s.nombre)} · ${esc(s.pais)}</button>`).join("")}</div>`:""}
+      <div class="btns"><button class="b" type="button" id="btnAdd">Agregar igualmente</button><button class="b" type="button" id="btnCancel">Cancelar</button></div>`;
+    v.querySelectorAll("[data-sg]").forEach(b=>b.onclick=()=>{const s=sg[+b.dataset.sg];$("inEquipo").value=s.nombre;$("inPais").value=s.pais;$("addForm").requestSubmit()});
+    $("btnAdd").onclick=()=>addClient(pendingValid);
+  }
+  const c=$("btnCancel"); if(c) c.onclick=resetForm;
+}
+function resetForm(){$("inIdioma").value="es";$("verdict").hidden=true;$("verdict").innerHTML="";$("inEquipo").value="";$("inPais").value="";pendingValid=null}
+function idFor(c){return slug(c.nombre)+"-"+slug(c.pais).slice(0,12)}
+
+async function addClient(c){
+  const v=$("verdict");
+  if(!db){v.insertAdjacentHTML("beforeend",`<p class="status">No se puede guardar desde esta vista.</p>`);return}
+  const id=idFor(c);
+  try{
+    await db.collection("clientes").doc(id).set({nombre:c.nombre,pais:c.pais,liga:c.liga||"",ciudad:c.ciudad||"",tareas:{semanal:true,diario:true,recordatorio:true,partido:true},idioma:$("inIdioma").value==="en"?"en":"es",creado:new Date().toISOString()});
+    resetForm(); go(id);
+    pedirBusqueda({id,nombre:c.nombre,pais:c.pais});
+  }catch(e){ v.insertAdjacentHTML("beforeend",`<p class="status">No se guardó: ${e?.code==="invalid_argument"?"no tienes permiso para editar esta lista.":"inténtalo de nuevo."}</p>`) }
+}
+
+/* ---------- Detalle ---------- */
+function renderDetail(c){
+  $("dPais").textContent=[c.ciudad,c.pais].filter(Boolean).join(" · ");
+  $("dNombre").textContent=c.nombre;
+  $("dLiga").textContent=c.liga?`Compite en ${c.liga}.`:"";
+  document.querySelectorAll("[data-lang]").forEach(b=>{b.setAttribute("aria-pressed",String((c.idioma||"es")===b.dataset.lang));b.disabled=!canWrite});
+  $("btnRemove").textContent=confirmRemove?"Confirmar: quitar cliente y su historial":"Quitar cliente";
+  const list=sorted(partidos[c.id]||[]);
+  const nx=nextOf(list); const t=today();
+  if(nx){const d=parseDate(nx.fecha);const days=Math.round((d-t)/864e5);
+    $("next").className="next"+(diaRel(nx)?" dia-"+diaRel(nx):"");
+    $("next").innerHTML=`${badgeDia(nx)}<div class="lbl">Próximo partido</div><div class="vs">${esc(nx.titulo)}</div>
+      <div class="meta"><span>${esc(whenText(nx))}</span><span>${esc(nx.competencia)}</span>${nx.estadio?`<span>${esc(nx.estadio)}</span>`:""}</div>
+      ${days>=0&&nx.fecha_confirmada?`<div class="count">${days===0?"Hoy":days===1?"Mañana":"En "+days+" días"}</div>`:""}`;
+  } else { $("next").className="next"; $("next").innerHTML=`<div class="lbl">Próximo partido</div><div class="vs">${list.length?"Sin partidos próximos cargados":"Calendario pendiente"}</div><div class="meta"><span>${list.length?"Se revisa cada lunes.":"Claude lo carga en la próxima revisión del lunes, o ahora con “Buscar partidos ahora”."}</span></div>`; }
+
+  const jug=list.filter(p=>p.estado==="jugado");
+  const g=jug.filter(p=>resLetter(p.resultado)==="G").length,e=jug.filter(p=>resLetter(p.resultado)==="E").length,pe=jug.filter(p=>resLetter(p.resultado)==="P").length;
+  $("summary").innerHTML=list.length?`
+    <div class="stat"><b>${list.length}</b><span>partidos en seguimiento</span></div>
+    <div class="stat"><b>${jug.length}</b><span>jugados · ${g}G ${e}E ${pe}P</span></div>
+    <div class="stat"><b>${list.filter(segAbierto).length}</b><span>seguimientos en curso</span></div>
+    <div class="stat"><b>${jug.filter(segPend).length}</b><span>jugados sin mensaje enviado</span></div>
+    <div class="stat"><b>${list.filter(p=>segOf(p).cerrado).length}</b><span>seguimientos cerrados</span></div>`:"";
+
+  const byMonth={}; list.forEach(p=>{const k=String(p.fecha).slice(0,7);(byMonth[k]=byMonth[k]||[]).push(p)});
+  const box=$("months");
+  box.innerHTML=list.length?Object.keys(byMonth).sort().map(k=>{const [y,m]=k.split("-").map(Number);
+    return `<section class="month"><h2>${MESES[m-1]} ${y} <small>${byMonth[k].length} partido${byMonth[k].length>1?"s":""}</small></h2><div class="list">${byMonth[k].map(p=>card(c.id,p)).join("")}</div></section>`}).join("<div style='height:18px'></div>")
+    :`<div class="empty">Todavía no hay partidos cargados para ${esc(c.nombre)}.</div>`;
+  box.querySelectorAll("[data-toggle]").forEach(b=>b.onclick=()=>{const id=b.dataset.toggle;open.has(id)?open.delete(id):open.add(id);renderView()});
+  box.querySelectorAll("[data-seg]").forEach(b=>b.onclick=()=>segAccion(c.id,b));
+  box.querySelectorAll("textarea[data-segdraft]").forEach(t=>t.oninput=()=>{drafts[t.dataset.segdraft]=t.value});
+  box.querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>copy(b));
+  box.querySelectorAll("[data-translate]").forEach(b=>b.onclick=()=>translate(c,b.dataset.translate,b));
+  box.querySelectorAll("textarea[data-notes]").forEach(t=>t.oninput=()=>{drafts[t.dataset.notes]=t.value});
+  box.querySelectorAll("[data-savenotes]").forEach(b=>b.onclick=()=>{const k=b.dataset.savenotes;save(c.id,b.dataset.id,{notas:$("n-"+k).value},b).then(ok=>{if(ok)delete drafts[k]})});
+}
+
+function msgBlock(cid,p,key){
+  const c=clientes.find(x=>x.id===cid)||{};
+  const es=`<div class="field"><label class="lab" for="m-${esc(key)}">Mensaje sugerido · español</label>
+    <textarea id="m-${esc(key)}" readonly>${esc(p.mensaje||"")}</textarea>
+    <div class="btns"><button class="b" type="button" data-copy="m-${esc(key)}">Copiar en español</button></div></div>`;
+  if(c.idioma!=="en") return es;
+  const en=p.mensaje_en?`<div class="field"><label class="lab" for="e-${esc(key)}">Suggested message · English</label>
+    <textarea id="e-${esc(key)}" readonly>${esc(p.mensaje_en)}</textarea>
+    <div class="btns"><button class="b" type="button" data-copy="e-${esc(key)}">Copy in English</button></div></div>`:
+    `<div class="field"><span class="lab">Suggested message · English</span>
+    <p style="color:var(--muted)">Todavía no está la versión en inglés. Se genera en la próxima revisión${sample&&canWrite&&p.mensaje?", o ahora:":"."}</p>
+    ${sample&&canWrite&&p.mensaje?`<div class="btns"><button class="b" type="button" data-translate="${esc(p.id)}">Traducir al inglés</button></div>`:""}</div>`;
+  return es+en;
+}
+
+function fmtLocal(iso){try{const d=new Date(iso);return d.toLocaleString("es-ES",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"Europe/Madrid"})+" (Madrid)"}catch{return iso}}
+function preBlock(cid,p,key){
+  const c=clientes.find(x=>x.id===cid)||{}, en=c.idioma==="en";
+  const a=p.alertas||{};
+  const msg=(id,label,txt,btn)=>`<div class="field"><label class="lab" for="${id}">${label}</label><textarea id="${id}" readonly style="min-height:70px">${esc(txt)}</textarea><div class="btns"><button class="b" type="button" data-copy="${id}">${btn}</button></div></div>`;
+  let out=`<p style="color:var(--muted)">Cuando se juegue, Claude cargará el resultado.</p>`;
+  if(!p.inicio_utc&&!p.mensaje_previa) return out+`<p style="color:var(--muted);font-size:14px">Alertas del día de partido: el mismo día del partido llega un aviso a la mañana, otro 3 horas antes y otro 1 hora antes.</p>`;
+  out+=`<div class="field"><span class="lab">Alertas del día de partido</span><p style="font-size:14px">`+
+    (p.inicio_utc?`Comienzo: ${esc(fmtLocal(p.inicio_utc))}<br>`:"")+
+    (a.aviso_dia?`Aviso de la mañana: enviado ${esc(fmtLocal(a.aviso_dia))}<br>`:"")+
+    (a.t3h?`3 horas antes: ${esc(fmtLocal(a.t3h))} ${a.enviada3h?"· enviada":"· programada"}<br>`:"")+
+    (a.t1h?`1 hora antes: ${esc(fmtLocal(a.t1h))} ${a.enviada1h?"· enviada":"· programada"}`:"")+
+    (!a.aviso_dia&&!a.t3h&&!a.t1h?`<span style="color:var(--muted)">Se programan solas el día del partido: aviso a la mañana, 3 horas antes y 1 hora antes.</span>`:"")+`</p></div>`;
+  return out;
+}
+
+function segBlock(cid,p,key){
+  const s=segOf(p), ed=segEdit[key]||null, dis=canWrite?"":"disabled";
+  const ta=(paso,ph,val)=>`<textarea data-segdraft="${esc(key+"|"+paso)}" id="sg-${esc(key)}-${paso}" placeholder="${esc(ph)}" aria-label="${esc(ph)}" ${dis}>${esc(drafts[key+"|"+paso]??val??"")}</textarea>`;
+  const btn=(acc,paso,label,cls="b")=>canWrite?`<button class="${cls}" type="button" data-seg="${acc}" data-paso="${paso}" data-id="${esc(p.id)}" data-key="${esc(key)}">${label}</button>`:"";
+  const step=(n,paso,titulo,hecho,cuerpoHecho,cuerpoForm,disponible,extraCls="")=>{
+    const editing=ed===paso;
+    const cls=(hecho&&!editing?"done":"")+(extraCls&&hecho?" "+extraCls:"")+(!hecho&&!disponible?" off":"");
+    return `<li class="${cls}"><span class="dot" aria-hidden="true">${hecho&&!editing?"✓":n}</span><div class="sb">
+      <div class="sh"><b>${titulo}</b>${hecho&&hecho.fecha&&!editing?`<span>${esc(fmtCorta(hecho.fecha))}</span>`:""}</div>
+      ${hecho&&!editing?cuerpoHecho:(disponible||editing?cuerpoForm:"")}</div></li>`;
+  };
+  const txt=t=>t?`<div class="txt">${esc(t)}</div>`:"";
+  const acciones=(paso)=>canWrite?`<div class="btns">${btn("editar",paso,"Editar","lnk")}${btn("quitar",paso,"Deshacer","lnk")}</div>`:"";
+  const guardarEd=(paso)=>ed===paso?btn("cancelar",paso,"Cancelar"):"";
+  const abierto=!s.cerrado;
+  return `<div class="field"><div class="seg-head"><span class="lab">Seguimiento</span>${s.cerrado?`<span class="chip c-mute">Cerrado</span>`:`<span class="chip c-env">En curso</span>`}</div>
+  <ol class="seg-steps">
+    ${step(1,"enviado","Mensaje enviado",s.enviado,txt(s.enviado?.nota)+acciones("enviado"),
+      `${ta("enviado","¿Qué les enviaste? (opcional)",s.enviado?.nota)}<div class="btns">${btn("guardar","enviado",ed==="enviado"?"Guardar":"Marcar mensaje enviado","b primary")}${guardarEd("enviado")}</div>`,abierto)}
+    ${step(2,"recordatorio","Recordatorio enviado",s.recordatorio,txt(s.recordatorio?.nota)+acciones("recordatorio"),
+      `<p style="font-size:13px;color:var(--muted)">Si no respondieron, envía un segundo mensaje y márcalo aquí.</p>${ta("recordatorio","¿Qué les escribiste?",s.recordatorio?.nota)}<div class="btns">${btn("guardar","recordatorio",ed==="recordatorio"?"Guardar":"Marcar recordatorio enviado","b")}${guardarEd("recordatorio")}</div>`,abierto&&!!s.enviado&&!s.respuesta)}
+    ${step(3,"respuesta","Respuesta del club",s.respuesta,txt(s.respuesta?.texto)+acciones("respuesta"),
+      `${ta("respuesta","¿Qué respondieron?",s.respuesta?.texto)}<div class="btns">${btn("guardar","respuesta",ed==="respuesta"?"Guardar":"Guardar respuesta","b primary")}${guardarEd("respuesta")}</div>`,abierto)}
+    ${step(4,"cerrado","Cerrado",s.cerrado,txt(s.cerrado?.nota)+(canWrite?`<div class="btns">${btn("editar","cerrado","Editar","lnk")}${btn("quitar","cerrado","Reabrir","lnk")}</div>`:""),
+      `${ta("cerrado","Cierre (opcional): cómo terminó",s.cerrado?.nota)}<div class="btns">${btn("guardar","cerrado",ed==="cerrado"?"Guardar":"Cerrar seguimiento","b")}${guardarEd("cerrado")}</div>`,true,"closed")}
+  </ol></div>`;
+}
+async function segAccion(cid,b){
+  const p=(partidos[cid]||[]).find(x=>x.id===b.dataset.id); if(!p) return;
+  const key=b.dataset.key, paso=b.dataset.paso, acc=b.dataset.seg;
+  if(acc==="editar"){segEdit[key]=paso;renderView();const t=$("sg-"+key+"-"+paso);if(t)t.focus();return}
+  if(acc==="cancelar"){delete segEdit[key];delete drafts[key+"|"+paso];renderView();return}
+  const s=segOf(p);
+  if(acc==="quitar"){ delete s[paso]; }
+  else { const t=$("sg-"+key+"-"+paso); const val=(t?.value||"").trim(); const prev=s[paso];
+    const fecha=prev?.fecha||new Date().toISOString();
+    s[paso]=paso==="respuesta"?{fecha,texto:val}:{fecha,nota:val};
+    if(paso==="respuesta"&&!val){t?.focus();const st=$("s-"+p.id);if(st)st.textContent="Escribe qué respondieron.";delete s[paso];return}
+  }
+  const ok=await save(cid,p.id,{seg:s,contacto:contactoDe(s)},b);
+  if(ok){delete segEdit[key];delete drafts[key+"|"+paso];p.seg=s;p.contacto=contactoDe(s);renderView()}
+}
+
+function card(cid,p){
+  const key=cid+"__"+p.id, d=parseDate(p.fecha), isOpen=open.has(key);
+  const ct=CONTACTO[p.contacto||"pendiente"]||CONTACTO.pendiente, rl=resLetter(p.resultado);
+  const sg=segOf(p), paso=segPaso(p);
+  const estChip=sg.cerrado?`<span class="chip c-mute">Cerrado</span>`:(p.estado==="jugado"||segIniciado(sg))?`<span class="chip c-env">En curso</span>`:"";
+  const right=p.estado==="jugado"?`<span class="score r-${rl}">${esc(p.resultado)}</span>${estChip}${!sg.cerrado?`<span class="chip ${paso[1]}">${paso[0]}</span>`:""}`:
+    segIniciado(sg)?`${estChip}<span class="chip ${paso[1]}">${paso[0]}</span>`:
+    p.estado==="aplazado"?`<span class="chip c-bad">Aplazado</span>`:diaRel(p)?badgeDia(p):`<span class="chip c-mute">${p.fecha_confirmada?"Programado":"Fecha a confirmar"}</span>`;
+  const dateBlock=p.fecha_confirmada?`<span class="d">${d.getDate()}</span><span class="m">${MESES[d.getMonth()].slice(0,3)}</span>`:`<span class="q">~${d.getDate()}</span><span class="m">${MESES[d.getMonth()].slice(0,3)}</span>`;
+  let host=""; try{host=p.fuente?new URL(p.fuente).hostname:""}catch{}
+  const det=!isOpen?"":`<div class="detail">
+    ${p.resumen?`<p>${esc(p.resumen)}</p>`:""}
+    ${p.estado!=="jugado"?preBlock(cid,p,key):""}
+    ${segBlock(cid,p,key)}
+    <div class="field"><label class="lab" for="n-${esc(key)}">Notas internas</label>
+      <textarea id="n-${esc(key)}" data-notes="${esc(key)}" ${canWrite?"":"readonly"}>${esc(drafts[key]??p.notas??"")}</textarea>
+      ${canWrite?`<div class="btns"><button class="b" type="button" data-id="${esc(p.id)}" data-savenotes="${esc(key)}">Guardar notas</button></div>`:""}</div>
+    ${host?`<p style="font-size:13px">Fuente: <a href="${esc(p.fuente)}" target="_blank" rel="noopener">${esc(host)}</a></p>`:""}
+    <div class="status" id="s-${esc(p.id)}"></div>
+  </div>`;
+  const dr=diaRel(p);
+  return `<article class="match${dr?" dia-"+dr:""}"><button class="row" type="button" data-toggle="${esc(key)}" aria-expanded="${isOpen}">
+    <div class="date">${dateBlock}</div>
+    <div class="info"><span class="t">${esc(p.titulo)}</span><span class="c">${esc(p.competencia)}${p.condicion?" · "+esc(p.condicion):""}${p.hora&&p.fecha_confirmada?" · "+esc(p.hora):""}</span></div>
+    <div class="right">${right}</div></button>${det}</article>`;
+}
+
+async function save(cid,pid,patch,btn){
+  const st=()=>$("s-"+pid);
+  if(!db){if(st())st().textContent="No se puede guardar en esta vista.";return false}
+  btn.disabled=true;
+  try{await db.collection("clientes/"+cid+"/partidos").doc(pid).update(patch)}
+  catch(e){if(e?.code==="invalid_argument")canWrite=false;btn.disabled=false;if(st())st().textContent="No se guardó: "+(e?.code==="invalid_argument"?"no tienes permiso para editar este seguimiento.":"inténtalo de nuevo en unos segundos.");return false}
+  if(st())st().textContent="Guardado."; return true;
+}
+async function copy(btn){
+  const ta=$(btn.dataset.copy), label=btn.textContent, en=/^(e|pve|h1e)-/.test(btn.dataset.copy);
+  try{await navigator.clipboard.writeText(ta.value);btn.textContent=en?"Copied":"Copiado"}
+  catch{ta.focus();ta.select();btn.textContent=en?"Text selected: copy it":"Texto seleccionado: cópialo"}
+  setTimeout(()=>btn.textContent=label,2200);
+}
+async function translate(c,pid,btn){
+  const p=(partidos[c.id]||[]).find(x=>x.id===pid); if(!p||!sample) return;
+  btn.disabled=true; btn.textContent="Traduciendo…";
+  try{
+    const {text}=await sample(`Translate this short message to a football club into natural, warm, professional English. Keep the same meaning, length and tone; sign off with "Best regards". Reply with ONLY the translated message, no quotes or notes.\n\n${p.mensaje}`,{modelTier:"quick"});
+    await save(c.id,pid,{mensaje_en:text.trim()},btn);
+  }catch(e){ btn.disabled=false; btn.textContent="Traducir al inglés"; const s=$("s-"+pid); if(s) s.textContent=e?.code==="not_granted"?"Esta página no tiene permiso para consultar a Claude.":"No se pudo traducir ahora. Prueba de nuevo." }
+}
+document.querySelectorAll("[data-lang]").forEach(b=>b.onclick=async()=>{
+  const c=clientes.find(x=>x.id===current); if(!c||!db||(c.idioma||"es")===b.dataset.lang) return;
+  try{await db.collection("clientes").doc(c.id).update({idioma:b.dataset.lang});$("langStatus").textContent=b.dataset.lang==="en"?"Los mensajes nuevos llegarán en español y en inglés.":"Los mensajes nuevos llegarán solo en español."}
+  catch{$("langStatus").textContent="No se guardó. Inténtalo de nuevo."}
+});
+
+$("btnBack").onclick=()=>go(null);
+$("btnRemove").onclick=async()=>{
+  const c=clientes.find(x=>x.id===current); if(!c||!db) return;
+  if(!confirmRemove){confirmRemove=true;renderView();$("toolStatus").textContent="Vuelve a pulsar para confirmar.";return}
+  try{
+    for(const p of partidos[c.id]||[]) await db.collection("clientes/"+c.id+"/partidos").doc(p.id).delete();
+    await db.collection("clientes").doc(c.id).delete();
+    $("toolStatus").textContent=""; go(null);
+  }catch{ $("toolStatus").textContent="No se pudo quitar. Inténtalo de nuevo." }
+};
+async function lanzarRevision(c){
+  return mcp.callTool("Claude Code Remote","fire_trigger",{trigger_id:TRIGGER_ID,text:`Esta vez revisa SOLO el cliente con id "${c.id}" (${c.nombre}, ${c.pais}). Carga sus partidos recientes y los de las próximas 3 semanas, y agrégalos al calendario.`},{cache:false});
+}
+async function pedirBusqueda(c){
+  // El dueño la lanza al instante; si no se puede (u otra persona), queda pendiente y la tarea horaria la procesa.
+  if(mcp&&isOwner){
+    try{ await lanzarRevision(c); $("toolStatus").textContent="Buscando sus partidos y agregándolos al calendario… aparecerán aquí en unos minutos."; return; }catch{}
+  }
+  try{ await db.collection("clientes").doc(c.id).update({busqueda_pendiente:true}); $("toolStatus").textContent="Búsqueda pedida: sus partidos aparecerán aquí y en el calendario en menos de una hora."; }
+  catch{ $("toolStatus").textContent="No se pudo pedir la búsqueda. Se hará igual en la revisión del lunes."; }
+}
+$("btnUpdate").onclick=async()=>{
+  const c=clientes.find(x=>x.id===current); if(!c) return;
+  const b=$("btnUpdate"); b.disabled=true; $("toolStatus").textContent="Pidiendo la búsqueda de partidos…";
+  await pedirBusqueda(c); setTimeout(()=>b.disabled=false,4000);
+};
+
+/* ---------- Última actividad del dueño (para el recordatorio de 6 h) ---------- */
+let lastTouch=0, touching=false;
+async function touch(){
+  const now=Date.now();
+  if(!db||touching||now-lastTouch<10*60*1000) return;   // como mucho una escritura cada 10 min
+  touching=true;
+  try{await db.doc("config/actividad").set({ultima:new Date(now).toISOString()});lastTouch=now}catch{}
+  touching=false;
+}
+
+/* ---------- Destinatarios del correo diario ---------- */
+let mails=[];
+function setupMail(){
+  const ref=db.doc("config/correo");
+  ref.onSnapshot(s=>{mails=Array.isArray(s.data()?.destinatarios)?s.data().destinatarios:[];renderMail()},()=>{});
+  $("mailForm").addEventListener("submit",async e=>{
+    e.preventDefault();
+    const v=$("inMail").value.trim().toLowerCase();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){$("mailStatus").textContent="Esa dirección no parece válida.";return}
+    if(mails.includes(v)){$("mailStatus").textContent="Ya está en la lista.";return}
+    await writeMails([...mails,v]); $("inMail").value="";
+  });
+}
+function renderMail(){
+  $("mailList").innerHTML=mails.length?mails.map((m,i)=>`<span class="chip c-env" style="display:inline-flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0;font-size:13px;padding:6px 10px">${esc(m)}<button type="button" data-rm="${i}" aria-label="Quitar ${esc(m)}" style="background:none;border:0;color:inherit;cursor:pointer;font:600 14px var(--f-body);padding:0">×</button></span>`).join(""):`<span class="status">Nadie todavía. Agrega al menos una dirección.</span>`;
+  $("mailList").querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>writeMails(mails.filter((_,i)=>i!==+b.dataset.rm)));
+}
+async function writeMails(list){
+  try{await db.doc("config/correo").update({destinatarios:list});$("mailStatus").textContent="Guardado."}
+  catch{$("mailStatus").textContent="No se guardó. Inténtalo de nuevo."}
+}
+
+
+/* ================= VENTAS ================= */
+const RESEARCH_TRIGGER="trig_01DhDqajdQqRhaWVmnZ3Z7Km";
+const VSTATUS=[["Cerrado","--s-cer"],["Demo Piston","--s-dem"],["Presupuesto Enviado","--s-pre"],["Contacto","--s-con"],["Esp Respuesta","--s-esp"],["Buscando Info","--s-bus"],["Usan otro Soft","--s-otr"],["","--s-non"]];
+const stVar=st=>(VSTATUS.find(x=>x[0]===(st||""))||VSTATUS[VSTATUS.length-1])[1];
+const stLabel=st=>st||"Sin estado";
+let ventas=[], ventasLoaded=false, vFiltroSt=LS.get("vFiltroSt",null), vPendValid=null, confirmQuitar=false;
+function fmtFecha(iso){ if(!iso) return ""; const d=parseDate(iso); if(isNaN(d)) return esc(iso); return `${d.getDate()} ${MESES[d.getMonth()].slice(0,3)} ${String(d.getFullYear()).slice(2)}`; }
+function vId(eq,pa){ return slug(eq)+"-"+slug(pa).slice(0,12); }
+const esFem=dep=>/femenin/i.test(dep||"");
+function vDocId(eq,pa,dep){ return vId(eq+(esFem(dep)&&!/femenin/i.test(eq)?" femenino":""),pa); }
+const vDepOf=v=>v.deporte||"Fútbol";
+function nivelDeLiga(liga,dep){const l=(liga||"").toLowerCase();if(!l)return 9;
+  if(/hockey/i.test(dep||"")){ if(/federaci[oó]n espa|rfeh/.test(l)) return 0; if(/honor b/.test(l)) return 2; if(/honor|liga iati|liga iberdrola/.test(l)) return 1; if(/primera/.test(l)) return 3; return 9; }
+  if(esFem(dep)){ if(/liga f\b|primera divisi[oó]n/.test(l)) return 1; if(/primera federaci/.test(l)) return 2; if(/segunda federaci/.test(l)) return 3; return 9; }
+  if(/primera divisi[oó]n|laliga ea|liga ea|la liga\b/.test(l)&&!/segunda/.test(l)) return 1; if(/segunda divisi[oó]n|hypermotion|laliga 2/.test(l)) return 2; if(/primera federaci|primera rfef/.test(l)) return 3; return 9;}
+const vNivel=v=>{const n=Number(v.nivel??v.orden_liga??nivelDeLiga(v.liga,v.deporte));return Number.isFinite(n)?n:9};
+const NIVEL_TXT=n=>n===9?"Otras categorías":n===0?"Federación":`${n}ª división`;
+const DEP_ORDEN=["Fútbol","Fútbol femenino","Hockey"];
+let vCollapsed=new Set((()=>{try{return JSON.parse(localStorage.getItem("vCollapsed")||"[]")}catch{return []}})());
+function saveCollapsed(){try{localStorage.setItem("vCollapsed",JSON.stringify([...vCollapsed]))}catch{}}
+let vRenderPending=false, vGroupKeys=[];
+const CE=(()=>{const d=document.createElement("div");try{d.contentEditable="plaintext-only"}catch{};return d.contentEditable==="plaintext-only"?"plaintext-only":"true"})();
+const vEditing=()=>{const a=document.activeElement;return !!(a&&(($("vRows").contains(a)&&a.matches(".ic,.idate"))||(document.getElementById("ccPanel")?.contains(a))))||!!document.getElementById("ccPanel")};
+let vDeporte=(()=>{try{return localStorage.getItem("vDeporte")||"Fútbol"}catch{return "Fútbol"}})();
+
+/* ---- contactos (un solo campo con cargo) ---- */
+const CFIELDS=["director_deportivo","analistas_primera","analista_juveniles"];
+const CARGOS=["Director deportivo","Analista primera","Analista juveniles","Entrenador","Otro"];
+const CARGO_DE={director_deportivo:"Director deportivo",analistas_primera:"Analista primera",analista_juveniles:"Analista juveniles"};
+function vContactos(v){
+  if(Array.isArray(v.contactos_lista)) return v.contactos_lista.filter(c=>c&&(c.nombre||c.telefono||c.email));
+  const out=[];
+  CFIELDS.forEach(f=>{
+    const L=v[f+"_lista"];
+    if(Array.isArray(L)) L.filter(c=>c&&(c.nombre||c.telefono||c.email)).forEach(c=>out.push({cargo:CARGO_DE[f],...c}));
+    else { const t=(v[f]||"").trim(); if(t) out.push({nombre:t,cargo:CARGO_DE[f],telefono:"",email:""}); }
+  });
+  return out;
+}
+function ccell(v){
+  const L=vContactos(v); const c=L[0];
+  const inner=c?`<span class="cn">${esc(c.nombre||c.telefono||c.email)}<small>${esc([c.cargo,c.telefono].filter(Boolean).join(" · "))}</small></span>${L.length>1?`<span class="more">+${L.length-1}</span>`:""}`:`<span class="cn"><span class="muted">—</span></span>`;
+  return `<button type="button" class="ccbtn" data-cc data-id="${esc(v.id)}" aria-haspopup="dialog" aria-expanded="false" aria-label="Contactos de ${esc(v.equipo)}: ${L.length}">${inner}<span class="car" aria-hidden="true">▾</span></button>`;
+}
+const telHref=t=>"tel:"+String(t).replace(/[^\d+]/g,"");
+const waHref=t=>{let d=String(t).replace(/\D/g,"");if(d.length===9&&/^[6789]/.test(d))d="34"+d;return "https://wa.me/"+d};
+let ccOpen=null; // {id,btn,edit}
+function cerrarContactos(){const p=$("ccPanel");if(p)p.remove();if(ccOpen?.btn)ccOpen.btn.setAttribute("aria-expanded","false");const b=ccOpen?.btn;ccOpen=null;if(vRenderPending)setTimeout(()=>{if(!vEditing())renderVentas()},0);return b}
+function abrirContactos(btn){
+  const same=ccOpen&&ccOpen.id===btn.dataset.id&&ccOpen.btn===btn;
+  cerrarContactos(); if(same) return;
+  ccOpen={id:btn.dataset.id,btn,edit:-1};
+  btn.setAttribute("aria-expanded","true");
+  const p=document.createElement("div"); p.id="ccPanel"; p.setAttribute("role","dialog"); p.setAttribute("aria-label","Contactos");
+  document.body.appendChild(p); pintarContactos(); posicionar(btn);
+  const v=ventas.find(x=>x.id===ccOpen.id); const first=p.querySelector("input"); if(first&&v&&!vContactos(v).length) first.focus();
+}
+function posicionar(btn){
+  const p=$("ccPanel"); if(!p) return; const r=btn.getBoundingClientRect(); const w=p.offsetWidth;
+  let left=r.right+window.scrollX-w; left=Math.max(16+window.scrollX,Math.min(left,window.scrollX+document.documentElement.clientWidth-w-16));
+  p.style.left=left+"px"; p.style.top=(r.bottom+window.scrollY+6)+"px";
+}
+function pintarContactos(){
+  const p=$("ccPanel"); if(!p||!ccOpen) return;
+  const v=ventas.find(x=>x.id===ccOpen.id); if(!v){cerrarContactos();return}
+  const L=vContactos(v), e=ccOpen.edit>=0?L[ccOpen.edit]:null;
+  const cargoSel=e?.cargo&&!CARGOS.includes(e.cargo)?"Otro":(e?.cargo||"Director deportivo");
+  p.innerHTML=`<div class="ch"><b>Contactos</b><span>${esc(v.equipo)}</span></div>
+    ${L.length?`<ul>${L.map((c,i)=>`<li><span class="nm">${esc(c.nombre||"Sin nombre")}</span>
+      ${c.cargo?`<span class="cg">${esc(c.cargo)}</span>`:""}
+      <span class="ln">${c.telefono?`<a href="${esc(telHref(c.telefono))}">📞 ${esc(c.telefono)}</a><a href="${esc(waHref(c.telefono))}" target="_blank" rel="noopener">WhatsApp</a>`:""}${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:""}${!c.telefono&&!c.email?`<span class="muted">Sin teléfono</span>`:""}</span>
+      ${canWrite?`<span class="ac"><button type="button" data-ce="${i}" aria-label="Editar ${esc(c.nombre)}">✎</button><button type="button" data-cd="${i}" aria-label="Quitar ${esc(c.nombre)}">×</button></span>`:""}</li>`).join("")}</ul>`:`<div class="empty2">Todavía no hay contactos.</div>`}
+    ${canWrite?`<form id="ccForm" autocomplete="off">
+      <input id="ccNombre" placeholder="Nombre" value="${esc(e?.nombre||"")}" aria-label="Nombre">
+      <select id="ccCargo" aria-label="Cargo">${CARGOS.map(k=>`<option${k===cargoSel?" selected":""}>${k}</option>`).join("")}</select>
+      <input id="ccTel" type="tel" placeholder="Teléfono" value="${esc(e?.telefono||"")}" aria-label="Teléfono">
+      <input id="ccMail" type="email" placeholder="Email (opcional)" value="${esc(e?.email||"")}" aria-label="Email">
+      <div class="row"><span class="status" id="ccStatus"></span>${e?`<button class="b" type="button" id="ccCancel">Cancelar</button>`:""}<button class="b primary" type="submit">${e?"Guardar":"Agregar"}</button></div>
+    </form>`:""}`;
+  p.querySelectorAll("[data-ce]").forEach(b=>b.onclick=()=>{ccOpen.edit=+b.dataset.ce;pintarContactos();$("ccNombre").focus()});
+  p.querySelectorAll("[data-cd]").forEach(b=>b.onclick=()=>{const L2=vContactos(v).filter((_,i)=>i!==+b.dataset.cd);ccOpen.edit=-1;guardarContactos(v,L2)});
+  const c=$("ccCancel"); if(c) c.onclick=()=>{ccOpen.edit=-1;pintarContactos()};
+  const fm=$("ccForm"); if(fm) fm.onsubmit=ev=>{ev.preventDefault();
+    let cargo=$("ccCargo").value; if(cargo==="Otro"&&e?.cargo&&!CARGOS.includes(e.cargo)) cargo=e.cargo;
+    const n={nombre:$("ccNombre").value.trim(),cargo,telefono:$("ccTel").value.trim(),email:$("ccMail").value.trim()};
+    if(!n.nombre&&!n.telefono&&!n.email){$("ccNombre").focus();return}
+    const L2=[...vContactos(v)]; if(ccOpen.edit>=0) L2[ccOpen.edit]=n; else L2.push(n);
+    ccOpen.edit=-1; guardarContactos(v,L2,true);
+  };
+}
+async function guardarContactos(v,L,refocus){
+  const linea=c=>[c.nombre,c.telefono,c.email].filter(Boolean).join(" · ");
+  const patch={contactos_lista:L};
+  CFIELDS.forEach(f=>{patch[f]=L.filter(c=>c.cargo===CARGO_DE[f]).map(linea).join("\n")});
+  patch.otros_contactos=L.filter(c=>!Object.values(CARGO_DE).includes(c.cargo)).map(c=>(c.cargo?c.cargo+": ":"")+linea(c)).join("\n");
+  const prev={}; Object.keys(patch).forEach(k=>prev[k]=v[k]);
+  Object.assign(v,patch); pintarContactos();
+  try{ await db.collection("ventas").doc(v.id).update(patch); const st=$("ccStatus"); if(st) st.textContent="Guardado."; }
+  catch{ Object.assign(v,prev); pintarContactos(); const st=$("ccStatus"); if(st) st.textContent="No se guardó. Inténtalo de nuevo."; }
+  if(refocus){const i=$("ccNombre"); if(i) i.focus();}
+  document.querySelectorAll(`[data-cc][data-id="${CSS.escape(v.id)}"]`).forEach(b=>{const h=document.createElement("div");h.innerHTML=ccell(v);const nb=h.firstElementChild;const isOpen=!!ccOpen&&ccOpen.btn===b;nb.setAttribute("aria-expanded",String(isOpen));nb.onclick=e=>{e.stopPropagation();abrirContactos(nb)};b.replaceWith(nb);if(isOpen)ccOpen.btn=nb});
+}
+document.addEventListener("click",e=>{const p=$("ccPanel");if(p&&!p.contains(e.target)&&!e.target.closest("[data-cc]"))cerrarContactos()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("ccPanel")){const b=cerrarContactos();if(b&&document.body.contains(b))b.focus()}});
+window.addEventListener("resize",()=>{if(ccOpen?.btn&&document.body.contains(ccOpen.btn))posicionar(ccOpen.btn)});
+
+function renderVentas(){
+  if(vEditing()){vRenderPending=true;return}
+  vRenderPending=false;
+  const q=($("vBuscar").value||"").toLowerCase().trim();
+  // deportes
+  const depCount={}; ventas.forEach(v=>{const d=vDepOf(v);depCount[d]=(depCount[d]||0)+1});
+  const deps=[...new Set([...DEP_ORDEN,...Object.keys(depCount)])].filter(d=>depCount[d]||DEP_ORDEN.includes(d))
+    .sort((a,b)=>{const ia=DEP_ORDEN.indexOf(a),ib=DEP_ORDEN.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b)});
+  if(!deps.includes(vDeporte)) vDeporte=deps[0];
+  $("vDeportes").innerHTML=deps.map(d=>`<button type="button" data-dep="${esc(d)}" aria-pressed="${d===vDeporte}">${esc(d)}<b>${depCount[d]||0}</b></button>`).join("");
+  $("vDeportes").querySelectorAll("[data-dep]").forEach(b=>b.onclick=()=>{vDeporte=b.dataset.dep;try{localStorage.setItem("vDeporte",vDeporte)}catch{};vFiltroSt=null;LS.set("vFiltroSt",null);renderVentas()});
+  $("vDepList").innerHTML=deps.map(d=>`<option value="${esc(d)}">`).join("");
+  const enDep=ventas.filter(v=>vDepOf(v)===vDeporte);
+  if(document.activeElement!==$("vDep")&&!$("vEquipo").value) $("vDep").value=vDeporte;
+  $("vLigaList").innerHTML=[...new Set(ventas.map(v=>v.liga).filter(Boolean))].sort().map(l=>`<option value="${esc(l)}">`).join("");
+  const paises=[...new Set(enDep.map(v=>v.pais||"Sin país"))].sort();
+  const sel=$("vFiltroPais"), want=sel.value||vPaisGuardado, cur=paises.includes(want)?want:"";
+  sel.innerHTML=`<option value="">Todos los países</option>`+paises.map(p=>`<option${p===cur?" selected":""}>${esc(p)}</option>`).join("");
+  const byPais=cur?enDep.filter(v=>(v.pais||"Sin país")===cur):enDep;
+  // chips
+  const counts={}; byPais.forEach(v=>{counts[v.status||""]=(counts[v.status||""]||0)+1});
+  if(ventasLoaded&&vFiltroSt!==null&&!counts[vFiltroSt]){vFiltroSt=null;LS.set("vFiltroSt",null)}
+  $("vStChips").innerHTML=VSTATUS.filter(([s])=>counts[s]).map(([s,c])=>`<button type="button" class="stchip" style="--c:var(${c})" data-st="${esc(s)}" aria-pressed="${vFiltroSt===s}">${esc(stLabel(s))}<b>${counts[s]}</b></button>`).join("");
+  $("vStChips").querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>{vFiltroSt=vFiltroSt===b.dataset.st?null:b.dataset.st;LS.set("vFiltroSt",vFiltroSt);renderVentas()});
+  let list=byPais.filter(v=>vFiltroSt===null||(v.status||"")===vFiltroSt);
+  if(q) list=list.filter(v=>[v.equipo,v.provincia,v.director_deportivo,v.analistas_primera,v.analista_juveniles,v.otros_contactos,v.informacion,v.liga,v.pais].join(" ").toLowerCase().includes(q));
+  $("vCount").textContent=`${list.length} de ${enDep.length} club${enDep.length===1?"":"es"}`;
+  const order=s=>{const i=VSTATUS.findIndex(x=>x[0]===(s||""));return i<0?99:i};
+  const multiPais=new Set(list.map(v=>v.pais||"Sin país")).size>1;
+  const groups={};
+  list.forEach(v=>{const n=vNivel(v);const k=n+"|"+(v.pais||"Sin país")+"|"+(n===9?"Otras categorías":(v.liga||"Sin liga"));(groups[k]=groups[k]||[]).push(v)});
+  const keys=Object.keys(groups).sort((a,b)=>{const[na,pa,la]=a.split("|"),[nb,pb,lb]=b.split("|");return (+na)-(+nb)||pa.localeCompare(pb)||la.localeCompare(lb,"es",{numeric:true})});
+  const cell=t=>t?esc(t).replace(/\n/g,"<br>"):`<span class="muted">—</span>`;
+  vGroupKeys=keys.map(k=>vDeporte+"|"+k);
+  const ed=(v,f)=>canWrite?`<div class="ic" contenteditable="${CE}" role="textbox" aria-multiline="true" aria-label="${esc(f.replace(/_/g," "))} de ${esc(v.equipo)}" data-id="${esc(v.id)}" data-f="${f}">${esc(v[f]||"")}</div>`:cell(v[f]);
+  $("vRows").innerHTML=list.length?keys.map(k=>{const[n,pa,li]=k.split("|");
+    const rows=groups[k].sort((a,b)=>order(a.status)-order(b.status)||a.equipo.localeCompare(b.equipo));
+    const titulo=+n===9?`<span class="dv">Otras categorías</span>`:`<span class="dv">${esc(NIVEL_TXT(+n))}</span>${esc(li)}`;
+    const gk=vDeporte+"|"+k, abierto=!!q||!vCollapsed.has(gk);
+    return `<tr class="grp"><td colspan="5"><button type="button" class="grpbtn" data-g="${esc(gk)}" aria-expanded="${abierto}"><span class="chev" aria-hidden="true">▼</span><span>${titulo}${multiPais?` · ${esc(pa)}`:""} <span style="font:500 12px var(--f-body);text-transform:none;letter-spacing:0">(${rows.length})</span></span></button></td></tr>`+(abierto?rows.map(v=>`<tr class="vrow" style="--c:var(${stVar(v.status)})">
+      <td class="eq"><button class="linkbtn" type="button" data-pr="${esc(v.id)}">${esc(v.equipo)}</button></td>
+      <td class="nw" style="white-space:nowrap">${canWrite?`<input type="date" class="idate${v.ultimo_contacto?"":" empty"}" data-id="${esc(v.id)}" data-f="ultimo_contacto" value="${esc(v.ultimo_contacto||"")}" aria-label="Último contacto con ${esc(v.equipo)}">`:(v.ultimo_contacto?fmtFecha(v.ultimo_contacto):`<span class="muted">—</span>`)}</td>
+      <td><select class="stsel" style="--c:var(${stVar(v.status)})" data-stid="${esc(v.id)}" aria-label="Status de ${esc(v.equipo)}" ${canWrite?"":"disabled"}>${VSTATUS.map(([s])=>`<option value="${esc(s)}"${(v.status||"")===s?" selected":""}>${esc(stLabel(s))}</option>`).join("")}</select></td>
+      <td class="info">${ed(v,"informacion")}</td>
+      <td class="ed cct">${ccell(v)}</td></tr>`).join(""):"")}).join("")
+    :`<tr><td colspan="5" class="muted" style="padding:18px">${enDep.length?"Ningún club coincide con el filtro.":ventas.length?`Todavía no hay clubes de ${esc(vDeporte)}.`:"Todavía no hay clubes en ventas. Agrega el primero con el formulario de arriba."}</td></tr>`;
+  $("vRows").querySelectorAll("[data-pr]").forEach(b=>b.onclick=()=>go("v-"+b.dataset.pr));
+  $("vRows").querySelectorAll("[data-cc]").forEach(b=>b.onclick=e=>{e.stopPropagation();abrirContactos(b)});
+  $("vRows").querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{const g=b.dataset.g;if(b.getAttribute("aria-expanded")==="true")vCollapsed.add(g);else vCollapsed.delete(g);saveCollapsed();renderVentas()});
+  $("vRows").querySelectorAll(".ic").forEach(el=>{
+    el.dataset.orig=el.textContent;
+    el.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();el.blur()}else if(e.key==="Escape"){el.textContent=el.dataset.orig;el.blur()}});
+    el.addEventListener("paste",e=>{if(CE==="true"){e.preventDefault();document.execCommand("insertText",false,(e.clipboardData||window.clipboardData).getData("text/plain"))}});
+    let t=null; el.addEventListener("input",()=>{clearTimeout(t);t=setTimeout(()=>vGuardarCelda(el),1200)});
+    el.addEventListener("blur",()=>{clearTimeout(t);vGuardarCelda(el)});
+  });
+  $("vRows").querySelectorAll(".idate").forEach(el=>{el.dataset.orig=el.value;el.addEventListener("change",()=>{el.classList.toggle("empty",!el.value);vGuardarCelda(el)});el.addEventListener("blur",()=>{if(vRenderPending)setTimeout(()=>{if(!vEditing())renderVentas()},0)})});
+  $("vRows").querySelectorAll("[data-stid]").forEach(sl=>sl.onchange=async()=>{
+    try{await db.collection("ventas").doc(sl.dataset.stid).update({status:sl.value});$("vStatus").textContent="Status guardado."}catch{$("vStatus").textContent="No se guardó el status. Inténtalo de nuevo."}
+  });
+}
+async function vGuardarCelda(el){
+  const isDate=el.classList.contains("idate");
+  let val=isDate?el.value:el.innerText.replace(/\u00a0/g," ").replace(/\n{3,}/g,"\n\n").trim();
+  if(!isDate&&!val&&el.innerHTML) el.innerHTML="";
+  const after=()=>{if(vRenderPending)setTimeout(()=>{if(!vEditing())renderVentas()},0)};
+  if(val===el.dataset.orig){after();return}
+  const id=el.dataset.id,f=el.dataset.f, v=ventas.find(x=>x.id===id);
+  try{
+    await db.collection("ventas").doc(id).update({[f]:val});
+    el.dataset.orig=val; if(v) v[f]=val;
+    el.classList.add("saved"); setTimeout(()=>el.classList.remove("saved"),1200);
+    $("vStatus").textContent=`Guardado: ${v?v.equipo:""}.`;
+  }catch{$("vStatus").textContent="No se guardó. Revisa la conexión e inténtalo de nuevo."}
+  after();
+}
+$("vExpandAll").onclick=()=>{vGroupKeys.forEach(g=>vCollapsed.delete(g));saveCollapsed();renderVentas()};
+$("vCollapseAll").onclick=()=>{vGroupKeys.forEach(g=>vCollapsed.add(g));saveCollapsed();renderVentas()};
+$("vBuscar").value=LS.get("vBuscar","");
+$("vBuscar").addEventListener("input",()=>{LS.set("vBuscar",$("vBuscar").value);renderVentas()});
+let vPaisGuardado=LS.get("vPais","");
+$("vFiltroPais").addEventListener("change",()=>{vPaisGuardado=$("vFiltroPais").value;LS.set("vPais",vPaisGuardado);renderVentas()});
+
+async function lanzarInvestigacion(id,nombre){
+  if(!mcp) throw {code:"no_mcp"};
+  return mcp.callTool("Claude Code Remote","fire_trigger",{trigger_id:RESEARCH_TRIGGER,text:`Investiga SOLO el club con id "${id}" (${nombre}).`},{cache:false});
+}
+async function vAgregar(d){
+  const v=$("vVerdict"); v.hidden=false;
+  if(!db){v.innerHTML=`<p>No se puede guardar desde esta vista.</p>`;return}
+  const dep=d.deporte||"Fútbol"; const id=vDocId(d.equipo,d.pais,dep);
+  if(ventas.find(x=>x.id===id)){v.className="verdict info";v.innerHTML=`<p>Ese club ya está en ventas.</p><div class="btns"><button class="b" type="button" id="vVer">Ver ficha</button></div>`;$("vVer").onclick=()=>go("v-"+id);return}
+  try{
+    await db.collection("ventas").doc(id).set({equipo:d.equipo,pais:d.pais,deporte:dep,liga:d.liga||"",nivel:nivelDeLiga(d.liga,dep),orden_liga:nivelDeLiga(d.liga,dep),provincia:d.provincia||"",licencias:"",director_deportivo:"",analistas_primera:"",analista_juveniles:"",status:"Buscando Info",ultimo_contacto:"",informacion:"",creado:new Date().toISOString()});
+    $("vEquipo").value="";$("vPais").value="";$("vLiga").value="";if(vDeporte!==dep){vDeporte=dep;try{localStorage.setItem("vDeporte",dep)}catch{}}v.hidden=true;vPendValid=null;
+    go("v-"+id);
+    pedirInvestigacion(id,d.equipo);
+  }catch(e){v.className="verdict no";v.innerHTML=`<p>No se guardó: ${e?.code==="invalid_argument"?"no tienes permiso para editar.":"inténtalo de nuevo."}</p>`}
+}
+$("vBtnDirecto").onclick=()=>{const eq=$("vEquipo").value.trim(),pa=$("vPais").value.trim();if(!eq||!pa){$("vAddForm").reportValidity();return}vAgregar({equipo:eq,pais:pa,liga:$("vLiga").value.trim(),deporte:$("vDep").value.trim()||"Fútbol"})};
+$("vAddForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const eq=$("vEquipo").value.trim(),pa=$("vPais").value.trim(),li=$("vLiga").value.trim(),dp=$("vDep").value.trim()||"Fútbol"; if(!eq||!pa) return;
+  const v=$("vVerdict"); v.hidden=false;
+  if(!sample){vAgregar({equipo:eq,pais:pa,liga:li,deporte:dp});return}
+  const btn=$("vBtnValidar"); btn.disabled=true; v.className="verdict info"; v.innerHTML=`<p>Validando “${esc(eq)}” en ${esc(pa)}…</p>`;
+  try{
+    const r=await sample.json(`Eres un verificador de clubes deportivos. El usuario quiere cargar como prospecto comercial al club "${eq}" de "${pa}", deporte: ${dp}${li?` (liga indicada: "${li}")`:""}.
+¿Existe un club o equipo de ese deporte (profesional o semiprofesional, incluidos filiales) con ese nombre o uno muy parecido en ese país?
+Responde SOLO con JSON: {"valido": true|false, "nombre_oficial": "nombre habitual del club", "pais": "país en español", "liga": "liga en la que compite (la más reciente que conozcas)", "ciudad": "ciudad", "provincia": "provincia o región", "nota": "una frase breve en español", "sugerencias": [{"nombre":"...","pais":"..."}]}
+Si no existe o es ambiguo, valido=false y hasta 3 sugerencias reales parecidas.`,{modelTier:"default"});
+    if(r&&r.valido){
+      vPendValid={deporte:dp,equipo:String(r.nombre_oficial||eq),pais:String(r.pais||pa),liga:li||String(r.liga||""),provincia:String(r.provincia||r.ciudad||"")};
+      v.className="verdict ok";
+      v.innerHTML=`<div class="h">Club encontrado: ${esc(vPendValid.equipo)}</div><p>${esc(r.ciudad?r.ciudad+", ":"")}${esc(vPendValid.pais)}${vPendValid.liga?" · "+esc(vPendValid.liga):""}</p>${r.nota?`<p style="font-size:14px">${esc(r.nota)}</p>`:""}<div class="btns"><button class="b primary" type="button" id="vOk">Agregar a ventas</button><button class="b" type="button" id="vCancel">Cancelar</button></div>`;
+      $("vOk").onclick=()=>vAgregar(vPendValid);
+    } else {
+      const sg=Array.isArray(r?.sugerencias)?r.sugerencias.slice(0,3):[];
+      v.className="verdict no";
+      v.innerHTML=`<div class="h">No encuentro “${esc(eq)}” en ${esc(pa)}</div>${r?.nota?`<p>${esc(r.nota)}</p>`:""}${sg.length?`<div class="lab">¿Quisiste decir?</div><div class="sugg">${sg.map((x,i)=>`<button class="b" type="button" data-vsg="${i}">${esc(x.nombre)} · ${esc(x.pais)}</button>`).join("")}</div>`:""}<div class="btns"><button class="b" type="button" id="vOk">Agregar igualmente</button><button class="b" type="button" id="vCancel">Cancelar</button></div>`;
+      v.querySelectorAll("[data-vsg]").forEach(b=>b.onclick=()=>{const x=sg[+b.dataset.vsg];$("vEquipo").value=x.nombre;$("vPais").value=x.pais;$("vAddForm").requestSubmit()});
+      $("vOk").onclick=()=>vAgregar({equipo:eq,pais:pa,liga:li,deporte:dp});
+    }
+    $("vCancel").onclick=()=>{v.hidden=true;v.innerHTML=""};
+  }catch(err){
+    v.className="verdict no";
+    v.innerHTML=`<p>${err?.code==="not_granted"?"Esta página no tiene permiso para consultar a Claude.":"No se pudo validar ahora."}</p><div class="btns"><button class="b" type="button" id="vOk">Agregar sin validar</button></div>`;
+    $("vOk").onclick=()=>vAgregar({equipo:eq,pais:pa,liga:li,deporte:dp});
+  }finally{btn.disabled=false}
+});
+
+/* ---- ficha de prospecto ---- */
+const PF=[["equipo","pf-equipo"],["pais","pf-pais"],["deporte","pf-deporte"],["liga","pf-liga"],["nivel","pf-nivel"],["provincia","pf-provincia"],["licencias","pf-licencias"],["status","pf-status"],["ultimo_contacto","pf-ultimo"],["informacion","pf-info"]];
+let pLoaded=null;
+function renderProspect(v){
+  $("pNombre").textContent=v.equipo; $("pPais").textContent=[v.provincia,v.pais].filter(Boolean).join(" · ");
+  $("pLiga").innerHTML=`${esc(vDepOf(v))} · ${esc(NIVEL_TXT(vNivel(v)))}${v.liga?" · "+esc(v.liga):""} · <span class="stchip" style="--c:var(${stVar(v.status)});cursor:default">${esc(stLabel(v.status))}</span>`;
+  $("pf-status").innerHTML=VSTATUS.map(([s])=>`<option value="${esc(s)}">${esc(stLabel(s))}</option>`).join("");
+  const editing=$("vProspect").contains(document.activeElement)&&document.activeElement.closest("#pForm");
+  if(pLoaded!==v.id||!editing){ PF.forEach(([k,id])=>{$(id).value=k==="nivel"?String(vNivel(v)):k==="deporte"?vDepOf(v):(v[k]??"")}); pLoaded=v.id; }
+  PF.forEach(([,id])=>{$(id).disabled=!canWrite});
+  {const h=$("pc-contactos");h.innerHTML=ccell(v);const b=h.querySelector("[data-cc]");if(b)b.onclick=e=>{e.stopPropagation();abrirContactos(b)}}
+  $("pInvestigar").hidden=!canWrite; $("pACliente").hidden=!(canWrite); $("pQuitar").hidden=!isAdmin;
+  $("pQuitar").textContent=confirmQuitar?"Confirmar: quitar de ventas":"Quitar de ventas";
+  const enCli=clientes.find(c=>c.id===vDocId(v.equipo,v.pais,v.deporte)); $("pACliente").textContent=enCli?"Ver en Soporte":"Pasar a Soporte";
+  const r=v.investigacion;
+  $("pResFecha").textContent=r?.actualizado?`actualizada el ${fmtFecha(String(r.actualizado).slice(0,10))}`:"";
+  if(!r){ $("pRes").innerHTML=`<div class="empty">Todavía no hay investigación de este club. ${mcp&&isOwner?"Toca “Investigar ahora” o espera":"Se completa"} en la próxima revisión automática (6:41 y 14:41).</div>`; return; }
+  const link=u=>{try{const h=new URL(u).hostname.replace(/^www\./,"");return `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(h)}</a>`}catch{return esc(u)}};
+  const row=(k,val)=>val?`<dt>${k}</dt><dd>${val}</dd>`:"";
+  const staff=Array.isArray(r.staff_analisis)&&r.staff_analisis.filter(x=>x&&x.nombre).length?`<ul>${r.staff_analisis.filter(x=>x&&x.nombre).map(x=>`<li>${esc(x.nombre)}${x.cargo?` · ${esc(x.cargo)}`:""}${x.enlace?` · ${link(x.enlace)}`:""}</li>`).join("")}</ul>`:"";
+  const news=Array.isArray(r.noticias)&&r.noticias.length?`<ul>${r.noticias.map(n=>`<li>${n.fecha?`<span class="muted">${esc(n.fecha)}</span> · `:""}${n.enlace?`<a href="${esc(n.enlace)}" target="_blank" rel="noopener">${esc(n.titulo||n.enlace)}</a>`:esc(n.titulo||"")}</li>`).join("")}</ul>`:"";
+  $("pRes").innerHTML=`<div class="rcard">
+    ${r.resumen?`<p style="margin:0">${esc(r.resumen)}</p>`:""}
+    ${r.oportunidad?`<div class="verdict ok" style="padding:12px"><div class="lab" style="color:var(--ok)">Oportunidad</div><p>${esc(r.oportunidad)}</p></div>`:""}
+    <dl>
+      ${row("Nombre oficial",esc(r.nombre_oficial||""))}${row("Web",r.web?link(r.web):"")}${row("Liga actual",esc(r.liga_actual||""))}
+      ${row("Ciudad",esc(r.ciudad||""))}${row("Estadio",esc(r.estadio||""))}${row("Presidente",esc(r.presidente||""))}
+      ${row("Director deportivo",esc(r.director_deportivo||""))}${row("Entrenador",esc(r.entrenador||""))}
+      ${row("Staff de análisis",staff)}${row("Tecnología",esc(r.tecnologia||""))}${row("Contacto",esc(r.contacto||""))}
+      ${row("Redes",esc(r.redes||""))}${row("Cantera",esc(r.cantera||""))}${row("Noticias",news)}
+      ${row("Fuentes",Array.isArray(r.fuentes)&&r.fuentes.length?r.fuentes.map(link).join(" · "):"")}
+    </dl></div>`;
+}
+$("pBack").onclick=()=>go("ventas");
+$("pForm").addEventListener("submit",async e=>{
+  e.preventDefault(); const id=current.slice(2); const patch={};
+  PF.forEach(([k,fid])=>{patch[k]=$(fid).value.trim()});
+  patch.nivel=Number.isFinite(+patch.nivel)&&patch.nivel!==""?+patch.nivel:9; patch.orden_liga=patch.nivel; patch.deporte=patch.deporte||"Fútbol";
+  try{await db.collection("ventas").doc(id).update(patch);$("pStatus").textContent="Guardado.";pLoaded=null}catch{$("pStatus").textContent="No se guardó. Inténtalo de nuevo."}
+});
+async function pedirInvestigacion(id,nombre){
+  if(mcp&&isOwner){ try{ await lanzarInvestigacion(id,nombre); $("pToolStatus").textContent="Investigando el club en internet… la información aparecerá aquí en unos minutos."; return; }catch{} }
+  try{ await db.collection("ventas").doc(id).update({investigacion_pendiente:true}); $("pToolStatus").textContent="Investigación pedida: la información aparecerá aquí en menos de una hora."; }
+  catch{ $("pToolStatus").textContent="No se pudo pedir la investigación. Se hará en la próxima revisión automática."; }
+}
+$("pInvestigar").onclick=async()=>{const v=ventas.find(x=>x.id===current.slice(2));if(!v)return;const b=$("pInvestigar");b.disabled=true;
+  await pedirInvestigacion(v.id,v.equipo); setTimeout(()=>b.disabled=false,5000)};
+$("pQuitar").onclick=async()=>{const id=current.slice(2);if(!confirmQuitar){confirmQuitar=true;renderView();$("pToolStatus").textContent="Vuelve a pulsar para confirmar.";return}
+  try{await db.collection("ventas").doc(id).delete();confirmQuitar=false;go("ventas")}catch{$("pToolStatus").textContent="No se pudo quitar."}};
+$("pACliente").onclick=async()=>{const v=ventas.find(x=>x.id===current.slice(2));if(!v)return;const cid=vDocId(v.equipo,v.pais,v.deporte);
+  if(clientes.find(c=>c.id===cid)){go(cid);return}
+  try{await db.collection("clientes").doc(cid).set({nombre:v.equipo,pais:v.pais,liga:v.liga||v.investigacion?.liga_actual||"",ciudad:v.investigacion?.ciudad||v.provincia||"",tareas:{semanal:true,diario:true,recordatorio:true,partido:true},idioma:"es",creado:new Date().toISOString()});
+    await db.collection("ventas").doc(v.id).update({status:"Cerrado"});
+    go(cid); pedirBusqueda({id:cid,nombre:v.equipo,pais:v.pais});
+  }catch{$("pToolStatus").textContent="No se pudo pasar a clientes."}};
+
+/* ---------- Datos ---------- */
+function syncSubs(){
+  const ids=new Set(clientes.map(c=>c.id));
+  for(const id of Object.keys(subs)) if(!ids.has(id)){subs[id]();delete subs[id];delete partidos[id]}
+  for(const id of ids) if(!subs[id]){
+    partidos[id]=[];
+    subs[id]=db.collection("clientes/"+id+"/partidos").onSnapshot(s=>{partidos[id]=s.docs.map(d=>({id:d.id,...d.data()}));renderView()},()=>{});
+  }
+}
+
+/* ---------- usuarios (solo administrador) ---------- */
+const ROLES={admin:"Administrador",editor:"Editor",lector:"Lector"};
+async function cargarUsuarios(){
+  if(!window.SB||window.SB_INFO.rol!=="admin") return;
+  $("usersBox").hidden=false;
+  const {data,error}=await SB.from("permisos").select("email,rol,nombre").order("email");
+  if(error){$("userStatus").textContent="No se pudo leer la lista de usuarios.";return}
+  $("usersList").innerHTML=data.map(u=>`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface)">
+    <span style="flex:1;min-width:180px;overflow-wrap:anywhere">${esc(u.email)}</span>
+    <select data-urol="${esc(u.email)}" aria-label="Rol de ${esc(u.email)}">${Object.entries(ROLES).map(([k,l])=>`<option value="${k}"${u.rol===k?" selected":""}>${l}</option>`).join("")}</select>
+    ${u.email.toLowerCase()===window.SB_INFO.email.toLowerCase()?`<span class="status">(tú)</span>`:`<button class="b danger" type="button" data-udel="${esc(u.email)}">Quitar</button>`}</div>`).join("");
+  $("usersList").querySelectorAll("[data-urol]").forEach(sl=>sl.onchange=async()=>{const {error}=await SB.from("permisos").update({rol:sl.value}).eq("email",sl.dataset.urol);$("userStatus").textContent=error?"No se guardó.":"Rol guardado."});
+  $("usersList").querySelectorAll("[data-udel]").forEach(b=>b.onclick=async()=>{const {error}=await SB.from("permisos").delete().eq("email",b.dataset.udel);$("userStatus").textContent=error?"No se pudo quitar.":"Quitado.";cargarUsuarios()});
+}
+$("userForm").addEventListener("submit",async e=>{e.preventDefault();
+  const em=$("inUser").value.trim().toLowerCase(); if(!em) return;
+  const {error}=await SB.from("permisos").upsert({email:em,rol:$("inRol").value});
+  $("userStatus").textContent=error?"No se pudo agregar.":`Agregado. Ahora ${em} tiene que entrar y tocar “Crear cuenta”.`; if(!error){$("inUser").value="";cargarUsuarios()}
+});
+
+(async()=>{
+  try{if(current&&!location.hash)history.replaceState(null,"","#"+current)}catch{}
+  renderView();
+  db=await window.claude?.use?.("db") ?? null;
+  const user=await window.claude?.use?.("user") ?? null;
+  if(user){try{const c=await user.can("data.write");if(c===false)canWrite=false}catch{}}
+  try{isOwner=user?(await user.isOwner())===true:false}catch{isOwner=false}
+  try{isAdmin=isOwner||(user?(await user.canEdit())===true:false)}catch{isAdmin=isOwner}
+  if(!canWrite){$("addForm").hidden=true;$("btnRemove").hidden=true;$("vAddForm").hidden=true;
+    const n=$("accessNote");n.hidden=false;n.innerHTML=`<div class="h">Estás en modo solo lectura</div><p>Puedes ver todo, pero no agregar ni editar. Para poder hacerlo, pídele al administrador que te cambie el rol a <b>editor</b> en Configuración → Usuarios. Después vuelve a entrar.</p>`}
+  if(!db){$("clients").innerHTML=`<div class="empty">No se pudo conectar con la base de datos. Recarga la página.</div>`;return}
+  db.collection("clientes").onSnapshot(s=>{clientes=s.docs.map(d=>({id:d.id,...d.data()}));cliLoaded=true;syncSubs();renderView()},()=>{});
+  db.collection("ventas").onSnapshot(s=>{ventas=s.docs.map(d=>({id:d.id,...d.data()}));ventasLoaded=true;if(current==="ventas"||(current||"").startsWith("v-"))renderView()},()=>{});
+  window.claude?.use?.("sample").then(s=>{sample=s});
+  renderView();
+  if(!isAdmin) $("btnRemove").hidden=true;
+  if(isAdmin) setupMail();
+  cargarUsuarios();
+  if(isOwner){ touch(); document.addEventListener("click",touch,{passive:true}); document.addEventListener("visibilitychange",()=>{if(!document.hidden)touch()}); }
+  if(canWrite) $("btnUpdate").hidden=false;
+  window.claude?.use?.("mcp").then(m=>{mcp=m});
+})();
+</script>
+
+</div>
+</body>
+</html>
