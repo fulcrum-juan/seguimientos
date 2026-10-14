@@ -406,7 +406,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,syst
     <header>
       <div class="eyebrow">Seguimiento semanal</div>
       <h1>Soporte</h1>
-      <p class="sub">Carga los clubes a los que les haces seguimiento. Cada lunes Claude revisa cuándo juegan y cómo salieron, y deja listo el mensaje para escribirles.</p>
+      <p class="sub">Carga los clubes a los que les haces seguimiento. Cada día Claude revisa cuándo juegan y cómo salieron, y deja listo el mensaje para escribirles.</p>
     </header>
 
     <form class="add" id="addForm" autocomplete="off">
@@ -444,12 +444,12 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,syst
     <section style="display:grid;gap:12px">
       <h2>Tareas automáticas <small>hora de Madrid</small></h2>
       <div class="sched">
-        <div class="st"><div class="when">Lunes · 8:53, y al agregar un cliente</div><div class="what">Revisión semanal</div><p>Busca los partidos de la semana pasada y de las próximas 3 semanas, carga resultados, deja los mensajes listos y los agrega al calendario.</p></div>
+        <div class="st"><div class="when">Todos los días · 6:45</div><div class="what">Actualización de partidos y calendario</div><p>Busca los partidos de la última semana y de las próximas 6 semanas (liga, copas y amistosos), carga resultados y cambios de fecha, deja los mensajes listos y actualiza el calendario Fulcrum Soporte.</p></div>
         <div class="st"><div class="when">Todos los días · 7:51</div><div class="what">Correo diario</div><p>Carga los resultados de la noche y envía desde tu Gmail el resumen de lo que hay que hacer a los destinatarios de abajo.</p></div>
-        <div class="st"><div class="when">Todos los días · 13:51</div><div class="what">Recordatorio</div><p>Si pasaron 6 horas sin que uses la página y quedan mensajes por enviar, te avisa por correo a juan.traverso@fulcrumtec.com.</p></div>
+        <div class="st"><div class="when">Todos los días · 8:03</div><div class="what">Investigación de ventas</div><p>Busca en internet la información relevante de los clubes de Ventas (staff, tecnología, noticias, contacto) de a 10 por vez, y la renueva cada 30 días.</p></div>
         <div class="st"><div class="when">Solo el día de partido · mañana, −3 h y −1 h</div><div class="what">Alertas de partido</div><p>El día que juega un cliente te llega un aviso a la mañana (8:47) con los partidos del día, otro 3 horas antes y otro 1 hora antes de cada partido. Se programan solas cada día para los partidos nuevos; los días sin partido no llega nada.</p></div>
-        <div class="st"><div class="when">Todos los días · 9:09 y 20:09</div><div class="what">Calendario Fulcrum Soporte</div><p>Crea los partidos nuevos en el calendario y actualiza fecha, hora y resultado de los que cambian, sin duplicar.</p></div>
-        <div class="st"><div class="when">Todos los días · 6:41 y 14:41, y al agregar un club</div><div class="what">Investigación de ventas</div><p>Busca en internet la información relevante de los clubes de Ventas (staff, tecnología, noticias, contacto) de a 10 por vez, y la renueva cada 30 días.</p></div>
+        <div class="st"><div class="when">Todos los días · 13:00</div><div class="what">Recordatorio</div><p>Si pasaron 6 horas sin que nadie use la página y quedan mensajes por enviar, te avisa por correo a juan.traverso@fulcrumtec.com.</p></div>
+        <div class="st"><div class="when">Cada hora · de 8 a 22</div><div class="what">Altas nuevas</div><p>Cuando alguien agrega un cliente o un club de Ventas, a la hora siguiente se buscan sus partidos o se investiga el club.</p></div>
       </div>
     </section>
 
@@ -768,7 +768,7 @@ function renderDetail(c){
     $("next").innerHTML=`${badgeDia(nx)}<div class="lbl">Próximo partido</div><div class="vs">${esc(nx.titulo)}</div>
       <div class="meta"><span>${esc(whenText(nx))}</span><span>${esc(nx.competencia)}</span>${nx.estadio?`<span>${esc(nx.estadio)}</span>`:""}</div>
       ${days>=0&&nx.fecha_confirmada?`<div class="count">${days===0?"Hoy":days===1?"Mañana":"En "+days+" días"}</div>`:""}`;
-  } else { $("next").className="next"; $("next").innerHTML=`<div class="lbl">Próximo partido</div><div class="vs">${list.length?"Sin partidos próximos cargados":"Calendario pendiente"}</div><div class="meta"><span>${list.length?"Se revisa cada lunes.":"Claude lo carga en la próxima revisión del lunes, o ahora con “Buscar partidos ahora”."}</span></div>`; }
+  } else { $("next").className="next"; $("next").innerHTML=`<div class="lbl">Próximo partido</div><div class="vs">${list.length?"Sin partidos próximos cargados":"Calendario pendiente"}</div><div class="meta"><span>${list.length?"Se revisa cada día a las 6:45.":"Claude lo carga en la próxima revisión diaria, o en menos de una hora con “Buscar partidos ahora”."}</span></div>`; }
 
   const jug=list.filter(p=>p.estado==="jugado");
   const g=jug.filter(p=>resLetter(p.resultado)==="G").length,e=jug.filter(p=>resLetter(p.resultado)==="E").length,pe=jug.filter(p=>resLetter(p.resultado)==="P").length;
@@ -933,7 +933,7 @@ $("btnRemove").onclick=async()=>{
   }catch{ $("toolStatus").textContent="No se pudo quitar. Inténtalo de nuevo." }
 };
 async function lanzarRevision(c){
-  return mcp.callTool("Claude Code Remote","fire_trigger",{trigger_id:TRIGGER_ID,text:`Esta vez revisa SOLO el cliente con id "${c.id}" (${c.nombre}, ${c.pais}). Carga sus partidos recientes y los de las próximas 3 semanas, y agrégalos al calendario.`},{cache:false});
+  return mcp.callTool("Claude Code Remote","fire_trigger",{trigger_id:TRIGGER_ID,text:`Esta vez revisa SOLO el cliente con id "${c.id}" (${c.nombre}, ${c.pais}). Carga sus partidos recientes y los de las próximas 6 semanas, y agrégalos al calendario.`},{cache:false});
 }
 async function pedirBusqueda(c){
   // El dueño la lanza al instante; si no se puede (u otra persona), queda pendiente y la tarea horaria la procesa.
@@ -941,7 +941,7 @@ async function pedirBusqueda(c){
     try{ await lanzarRevision(c); $("toolStatus").textContent="Buscando sus partidos y agregándolos al calendario… aparecerán aquí en unos minutos."; return; }catch{}
   }
   try{ await db.collection("clientes").doc(c.id).update({busqueda_pendiente:true}); $("toolStatus").textContent="Búsqueda pedida: sus partidos aparecerán aquí y en el calendario en menos de una hora."; }
-  catch{ $("toolStatus").textContent="No se pudo pedir la búsqueda. Se hará igual en la revisión del lunes."; }
+  catch{ $("toolStatus").textContent="No se pudo pedir la búsqueda. Se hará igual en la revisión diaria de las 6:45."; }
 }
 $("btnUpdate").onclick=async()=>{
   const c=clientes.find(x=>x.id===current); if(!c) return;
