@@ -199,6 +199,8 @@ footer{font-size:13px;color:var(--muted)}
 .addrow5{grid-template-columns:1.4fr 1fr 1fr 1fr auto auto}
 @media (max-width:760px){.addrow5{grid-template-columns:1fr 1fr}.addrow5 .fld:first-child{grid-column:1/-1}}
 .sportbar{display:inline-flex;flex-wrap:wrap;justify-self:start;max-width:100%}
+.paisbar{margin-bottom:-4px}
+.paisbar button[aria-pressed="false"] b:empty{display:none}
 .sportbar button b{font-variant-numeric:tabular-nums;margin-left:6px;opacity:.75;font-weight:600}
 .vtable tr.grp td .dv{color:var(--fg);margin-right:8px}
 .vtable tr.grp td{padding:0}
@@ -293,6 +295,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,syst
 .lg-msg.bad{color:var(--bad)} .lg-msg.ok{color:var(--ok)}
 #userbar{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
 #userbar .b{padding:6px 10px;font-size:13px}
+@media (max-width:640px){.tabs{flex-wrap:wrap}.tabs button[role=tab]{padding:10px 9px;font-size:14px;white-space:nowrap}#userbar{order:-1;width:100%;justify-content:flex-end;min-width:0}#whoami{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}}
 #usersList select{width:auto;min-width:150px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -321,7 +324,8 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,syst
 <div class="wrap">
   <div class="verdict info" id="accessNote" role="status" hidden style="margin-bottom:18px"></div>
   <nav class="tabs" id="tabs" role="tablist" aria-label="Secciones" hidden>
-    <button type="button" role="tab" data-tab="ventas">Ventas</button>
+    <button type="button" role="tab" data-tab="ventas">Ventas UE</button>
+    <button type="button" role="tab" data-tab="ventas-latam">Ventas LATAM</button>
     <button type="button" role="tab" data-tab="">Soporte</button>
     <button type="button" role="tab" data-tab="config" id="tabConfig">Configuración</button>
     <span id="userbar" hidden><span id="whoami"></span><button class="b" type="button" id="btnSalir">Salir</button></span>
@@ -330,8 +334,8 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,syst
   <!-- Vista: ventas -->
   <div id="vVentas" style="display:grid;gap:26px" hidden>
     <header>
-      <div class="eyebrow">Prospectos y contactos</div>
-      <h1>Ventas</h1>
+      <div class="eyebrow" id="vEyebrow">Prospectos y contactos · Europa</div>
+      <h1 id="vTitulo">Ventas UE</h1>
       <p class="sub">El seguimiento comercial de cada club: con quién hablamos, en qué estado está y qué sabemos de ellos. Al agregar un club, Claude investiga en internet su información relevante.</p>
     </header>
     <form class="add" id="vAddForm" autocomplete="off">
@@ -348,11 +352,12 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,syst
     </form>
     <section style="display:grid;gap:12px">
       <h2>Seguimiento <small id="vCount"></small></h2>
+      <div class="seg sportbar paisbar" id="vPaises" role="group" aria-label="País"></div>
       <div class="seg sportbar" id="vDeportes" role="group" aria-label="Deporte"></div>
       <datalist id="vDepList"></datalist><datalist id="vLigaList"></datalist>
       <div class="vt-filters">
         <input type="text" id="vBuscar" placeholder="Buscar club, persona o nota" aria-label="Buscar">
-        <select id="vFiltroPais" aria-label="Filtrar por país"></select>
+        
         <span id="vStChips" class="vt-filters"></span>
         <span class="vt-collapse"><button type="button" class="b" id="vExpandAll">Expandir todo</button><button type="button" class="b" id="vCollapseAll">Contraer todo</button></span>
       </div>
@@ -581,7 +586,7 @@ function renderView(){
   const y=window.scrollY;
   renderView0();
   if(restoreY!==null){
-    const loaded=(current==="ventas"||(current||"").startsWith("v-"))?ventasLoaded:cliLoaded;
+    const loaded=((current||"").startsWith("ventas")||(current||"").startsWith("v-"))?ventasLoaded:cliLoaded;
     const alto=document.documentElement.scrollHeight;
     if(alto>=restoreY+window.innerHeight*0.6||loaded){window.scrollTo(0,restoreY);}
     if((loaded&&alto>=restoreY+window.innerHeight*0.6)||Date.now()>restoreHasta) restoreY=null;
@@ -589,7 +594,8 @@ function renderView(){
 }
 function renderView0(){
   const cfg=current==="config"&&isAdmin;
-  const ven=current==="ventas";
+  const ven=current==="ventas"||current==="ventas-latam";
+  if(ven) vRegion=current==="ventas-latam"?"latam":"ue";
   const pid=current&&current.startsWith("v-")?current.slice(2):null;
   const pr=pid?ventas.find(x=>x.id===pid):null;
   const c=(cfg||ven||pid)?null:clientes.find(x=>x.id===current);
@@ -597,7 +603,7 @@ function renderView0(){
   $("vList").hidden=!!c||cfg||ven||!!pid; $("vDetail").hidden=!c; $("vConfig").hidden=!cfg;
   $("vVentas").hidden=!ven; $("vProspect").hidden=!pr;
   $("tabs").hidden=!!c||!!pr; $("tabConfig").hidden=!isAdmin;
-  const tab=cfg?"config":(ven||pid)?"ventas":"";
+  const tab=cfg?"config":ven?current:pid?(pr&&regionDe(pr)==="latam"?"ventas-latam":"ventas"):"";
   document.querySelectorAll("[data-tab]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===tab)));
   if(c) renderDetail(c); else if(cfg) renderConfig(); else if(pr) renderProspect(pr); else if(ven) renderVentas(); else if(!pid) renderList();
   if(pid&&!pr&&ventasLoaded){ current="ventas"; renderView0(); }
@@ -996,10 +1002,16 @@ const vDepOf=v=>v.deporte||"Fútbol";
 function nivelDeLiga(liga,dep){const l=(liga||"").toLowerCase();if(!l)return 9;
   if(/hockey/i.test(dep||"")){ if(/federaci[oó]n espa|rfeh/.test(l)) return 0; if(/honor b/.test(l)) return 2; if(/honor|liga iati|liga iberdrola/.test(l)) return 1; if(/primera/.test(l)) return 3; return 9; }
   if(esFem(dep)){ if(/liga f\b|primera divisi[oó]n/.test(l)) return 1; if(/primera federaci/.test(l)) return 2; if(/segunda federaci/.test(l)) return 3; return 9; }
-  if(/primera divisi[oó]n|laliga ea|liga ea|la liga\b/.test(l)&&!/segunda/.test(l)) return 1; if(/segunda divisi[oó]n|hypermotion|laliga 2/.test(l)) return 2; if(/primera federaci|primera rfef/.test(l)) return 3; return 9;}
+  if(/primera b|primera nacional|serie b|s[ée]rie b|segunda/.test(l)) return 2; if(/primera divisi[oó]n|laliga ea|liga ea|la liga\b|liga profesional|serie a|s[ée]rie a|brasileir|betplay|liga mx|ligapro|liga 1\b|primeira liga|liga portugal/.test(l)&&!/segunda/.test(l)) return 1; if(/segunda divisi[oó]n|hypermotion|laliga 2/.test(l)) return 2; if(/primera federaci|primera rfef/.test(l)) return 3; return 9;}
 const vNivel=v=>{const n=Number(v.nivel??v.orden_liga??nivelDeLiga(v.liga,v.deporte));return Number.isFinite(n)?n:9};
 const NIVEL_TXT=n=>n===9?"Otras categorías":n===0?"Federación":`${n}ª división`;
 const DEP_ORDEN=["Fútbol","Fútbol femenino","Hockey"];
+const normP=p=>(p||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+const LATAM_SET=new Set(["argentina","brasil","brazil","paraguay","peru","chile","ecuador","bolivia","colombia","uruguay","venezuela","mexico","costa rica","panama","guatemala","honduras","el salvador","nicaragua","cuba","republica dominicana","puerto rico"]);
+const PAISES_BASE={ue:["España","Portugal","Italia"],latam:["Argentina","Brasil","Paraguay","Perú","Chile","Ecuador","Bolivia","Colombia","Uruguay","Venezuela","México"]};
+const regionDe=v=>v.region==="latam"||v.region==="ue"?v.region:(LATAM_SET.has(normP(v.pais))?"latam":"ue");
+let vRegion="ue";
+const vPaisSel={ue:LS.get("vPais_ue",""),latam:LS.get("vPais_latam","")};
 let vCollapsed=new Set((()=>{try{return JSON.parse(localStorage.getItem("vCollapsed")||"[]")}catch{return []}})());
 function saveCollapsed(){try{localStorage.setItem("vCollapsed",JSON.stringify([...vCollapsed]))}catch{}}
 let vRenderPending=false, vGroupKeys=[];
@@ -1092,27 +1104,39 @@ function renderVentas(){
   if(vEditing()){vRenderPending=true;return}
   vRenderPending=false;
   const q=($("vBuscar").value||"").toLowerCase().trim();
+  const latam=vRegion==="latam";
+  $("vTitulo").textContent=latam?"Ventas LATAM":"Ventas UE";
+  $("vEyebrow").textContent="Prospectos y contactos · "+(latam?"Latinoamérica":"Europa");
+  $("vPais").placeholder=latam?"Ej. Argentina":"Ej. España"; $("vEquipo").placeholder=latam?"Ej. Club Atlético Lanús":"Ej. Real Zaragoza";
+  const enRegion=ventas.filter(v=>regionDe(v)===vRegion);
+  // países
+  const pCount={}; enRegion.forEach(v=>{const p=v.pais||"Sin país";pCount[p]=(pCount[p]||0)+1});
+  const base=PAISES_BASE[vRegion];
+  const paises=[...base,...Object.keys(pCount).filter(p=>!base.some(b=>normP(b)===normP(p))).sort()];
+  const cntP=p=>Object.keys(pCount).filter(k=>normP(k)===normP(p)).reduce((a,k)=>a+pCount[k],0);
+  let curP=vPaisSel[vRegion]; if(curP&&!paises.some(p=>normP(p)===normP(curP))) curP="";
+  $("vPaises").innerHTML=`<button type="button" data-pais="" aria-pressed="${!curP}">Todos<b>${enRegion.length}</b></button>`+paises.map(p=>`<button type="button" data-pais="${esc(p)}" aria-pressed="${normP(p)===normP(curP)}">${esc(p)}<b>${cntP(p)||""}</b></button>`).join("");
+  $("vPaises").querySelectorAll("[data-pais]").forEach(b=>b.onclick=()=>{vPaisSel[vRegion]=b.dataset.pais;LS.set("vPais_"+vRegion,b.dataset.pais);vFiltroSt=null;LS.set("vFiltroSt",null);renderVentas()});
+  const byPais=curP?enRegion.filter(v=>normP(v.pais)===normP(curP)):enRegion;
   // deportes
-  const depCount={}; ventas.forEach(v=>{const d=vDepOf(v);depCount[d]=(depCount[d]||0)+1});
+  const depCount={}; byPais.forEach(v=>{const d=vDepOf(v);depCount[d]=(depCount[d]||0)+1});
   const deps=[...new Set([...DEP_ORDEN,...Object.keys(depCount)])].filter(d=>depCount[d]||DEP_ORDEN.includes(d))
     .sort((a,b)=>{const ia=DEP_ORDEN.indexOf(a),ib=DEP_ORDEN.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b)});
   if(!deps.includes(vDeporte)) vDeporte=deps[0];
   $("vDeportes").innerHTML=deps.map(d=>`<button type="button" data-dep="${esc(d)}" aria-pressed="${d===vDeporte}">${esc(d)}<b>${depCount[d]||0}</b></button>`).join("");
   $("vDeportes").querySelectorAll("[data-dep]").forEach(b=>b.onclick=()=>{vDeporte=b.dataset.dep;try{localStorage.setItem("vDeporte",vDeporte)}catch{};vFiltroSt=null;LS.set("vFiltroSt",null);renderVentas()});
   $("vDepList").innerHTML=deps.map(d=>`<option value="${esc(d)}">`).join("");
-  const enDep=ventas.filter(v=>vDepOf(v)===vDeporte);
+  const enDep=byPais.filter(v=>vDepOf(v)===vDeporte);
   if(document.activeElement!==$("vDep")&&!$("vEquipo").value) $("vDep").value=vDeporte;
-  $("vLigaList").innerHTML=[...new Set(ventas.map(v=>v.liga).filter(Boolean))].sort().map(l=>`<option value="${esc(l)}">`).join("");
-  const paises=[...new Set(enDep.map(v=>v.pais||"Sin país"))].sort();
-  const sel=$("vFiltroPais"), want=sel.value||vPaisGuardado, cur=paises.includes(want)?want:"";
-  sel.innerHTML=`<option value="">Todos los países</option>`+paises.map(p=>`<option${p===cur?" selected":""}>${esc(p)}</option>`).join("");
-  const byPais=cur?enDep.filter(v=>(v.pais||"Sin país")===cur):enDep;
+  {const ip=$("vPais"); if(document.activeElement!==ip&&(!ip.value||ip.value===ip.dataset.auto)){ip.value=curP||"";ip.dataset.auto=ip.value}}
+  $("vLigaList").innerHTML=[...new Set(enRegion.map(v=>v.liga).filter(Boolean))].sort().map(l=>`<option value="${esc(l)}">`).join("");
+  const sinFiltroPais=enDep;
   // chips
-  const counts={}; byPais.forEach(v=>{counts[v.status||""]=(counts[v.status||""]||0)+1});
+  const counts={}; sinFiltroPais.forEach(v=>{counts[v.status||""]=(counts[v.status||""]||0)+1});
   if(ventasLoaded&&vFiltroSt!==null&&!counts[vFiltroSt]){vFiltroSt=null;LS.set("vFiltroSt",null)}
   $("vStChips").innerHTML=VSTATUS.filter(([s])=>counts[s]).map(([s,c])=>`<button type="button" class="stchip" style="--c:var(${c})" data-st="${esc(s)}" aria-pressed="${vFiltroSt===s}">${esc(stLabel(s))}<b>${counts[s]}</b></button>`).join("");
   $("vStChips").querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>{vFiltroSt=vFiltroSt===b.dataset.st?null:b.dataset.st;LS.set("vFiltroSt",vFiltroSt);renderVentas()});
-  let list=byPais.filter(v=>vFiltroSt===null||(v.status||"")===vFiltroSt);
+  let list=sinFiltroPais.filter(v=>vFiltroSt===null||(v.status||"")===vFiltroSt);
   if(q) list=list.filter(v=>[v.equipo,v.provincia,v.director_deportivo,v.analistas_primera,v.analista_juveniles,v.otros_contactos,v.informacion,v.liga,v.pais].join(" ").toLowerCase().includes(q));
   $("vCount").textContent=`${list.length} de ${enDep.length} club${enDep.length===1?"":"es"}`;
   const order=s=>{const i=VSTATUS.findIndex(x=>x[0]===(s||""));return i<0?99:i};
@@ -1121,19 +1145,19 @@ function renderVentas(){
   list.forEach(v=>{const n=vNivel(v);const k=n+"|"+(v.pais||"Sin país")+"|"+(n===9?"Otras categorías":(v.liga||"Sin liga"));(groups[k]=groups[k]||[]).push(v)});
   const keys=Object.keys(groups).sort((a,b)=>{const[na,pa,la]=a.split("|"),[nb,pb,lb]=b.split("|");return (+na)-(+nb)||pa.localeCompare(pb)||la.localeCompare(lb,"es",{numeric:true})});
   const cell=t=>t?esc(t).replace(/\n/g,"<br>"):`<span class="muted">—</span>`;
-  vGroupKeys=keys.map(k=>vDeporte+"|"+k);
+  vGroupKeys=keys.map(k=>vRegion+"|"+vDeporte+"|"+k);
   const ed=(v,f)=>canWrite?`<div class="ic" contenteditable="${CE}" role="textbox" aria-multiline="true" aria-label="${esc(f.replace(/_/g," "))} de ${esc(v.equipo)}" data-id="${esc(v.id)}" data-f="${f}">${esc(v[f]||"")}</div>`:cell(v[f]);
   $("vRows").innerHTML=list.length?keys.map(k=>{const[n,pa,li]=k.split("|");
     const rows=groups[k].sort((a,b)=>order(a.status)-order(b.status)||a.equipo.localeCompare(b.equipo));
     const titulo=+n===9?`<span class="dv">Otras categorías</span>`:`<span class="dv">${esc(NIVEL_TXT(+n))}</span>${esc(li)}`;
-    const gk=vDeporte+"|"+k, abierto=!!q||!vCollapsed.has(gk);
+    const gk=vRegion+"|"+vDeporte+"|"+k, abierto=!!q||!vCollapsed.has(gk);
     return `<tr class="grp"><td colspan="5"><button type="button" class="grpbtn" data-g="${esc(gk)}" aria-expanded="${abierto}"><span class="chev" aria-hidden="true">▼</span><span>${titulo}${multiPais?` · ${esc(pa)}`:""} <span style="font:500 12px var(--f-body);text-transform:none;letter-spacing:0">(${rows.length})</span></span></button></td></tr>`+(abierto?rows.map(v=>`<tr class="vrow" style="--c:var(${stVar(v.status)})">
       <td class="eq"><button class="linkbtn" type="button" data-pr="${esc(v.id)}">${esc(v.equipo)}</button></td>
       <td class="nw" style="white-space:nowrap">${canWrite?`<input type="date" class="idate${v.ultimo_contacto?"":" empty"}" data-id="${esc(v.id)}" data-f="ultimo_contacto" value="${esc(v.ultimo_contacto||"")}" aria-label="Último contacto con ${esc(v.equipo)}">`:(v.ultimo_contacto?fmtFecha(v.ultimo_contacto):`<span class="muted">—</span>`)}</td>
       <td><select class="stsel" style="--c:var(${stVar(v.status)})" data-stid="${esc(v.id)}" aria-label="Status de ${esc(v.equipo)}" ${canWrite?"":"disabled"}>${VSTATUS.map(([s])=>`<option value="${esc(s)}"${(v.status||"")===s?" selected":""}>${esc(stLabel(s))}</option>`).join("")}</select></td>
       <td class="info">${ed(v,"informacion")}</td>
       <td class="ed cct">${ccell(v)}</td></tr>`).join(""):"")}).join("")
-    :`<tr><td colspan="5" class="muted" style="padding:18px">${enDep.length?"Ningún club coincide con el filtro.":ventas.length?`Todavía no hay clubes de ${esc(vDeporte)}.`:"Todavía no hay clubes en ventas. Agrega el primero con el formulario de arriba."}</td></tr>`;
+    :`<tr><td colspan="5" class="muted" style="padding:18px">${enDep.length?"Ningún club coincide con el filtro.":enRegion.length?`Todavía no hay clubes de ${esc(vDeporte)}${curP?" en "+esc(curP):""}.`:`Todavía no hay clubes en ${latam?"Ventas LATAM":"Ventas UE"}. Agrega el primero con el formulario de arriba.`}</td></tr>`;
   $("vRows").querySelectorAll("[data-pr]").forEach(b=>b.onclick=()=>go("v-"+b.dataset.pr));
   $("vRows").querySelectorAll("[data-cc]").forEach(b=>b.onclick=e=>{e.stopPropagation();abrirContactos(b)});
   $("vRows").querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{const g=b.dataset.g;if(b.getAttribute("aria-expanded")==="true")vCollapsed.add(g);else vCollapsed.delete(g);saveCollapsed();renderVentas()});
@@ -1168,8 +1192,6 @@ $("vExpandAll").onclick=()=>{vGroupKeys.forEach(g=>vCollapsed.delete(g));saveCol
 $("vCollapseAll").onclick=()=>{vGroupKeys.forEach(g=>vCollapsed.add(g));saveCollapsed();renderVentas()};
 $("vBuscar").value=LS.get("vBuscar","");
 $("vBuscar").addEventListener("input",()=>{LS.set("vBuscar",$("vBuscar").value);renderVentas()});
-let vPaisGuardado=LS.get("vPais","");
-$("vFiltroPais").addEventListener("change",()=>{vPaisGuardado=$("vFiltroPais").value;LS.set("vPais",vPaisGuardado);renderVentas()});
 
 async function lanzarInvestigacion(id,nombre){
   if(!mcp) throw {code:"no_mcp"};
@@ -1181,7 +1203,7 @@ async function vAgregar(d){
   const dep=d.deporte||"Fútbol"; const id=vDocId(d.equipo,d.pais,dep);
   if(ventas.find(x=>x.id===id)){v.className="verdict info";v.innerHTML=`<p>Ese club ya está en ventas.</p><div class="btns"><button class="b" type="button" id="vVer">Ver ficha</button></div>`;$("vVer").onclick=()=>go("v-"+id);return}
   try{
-    await db.collection("ventas").doc(id).set({equipo:d.equipo,pais:d.pais,deporte:dep,liga:d.liga||"",nivel:nivelDeLiga(d.liga,dep),orden_liga:nivelDeLiga(d.liga,dep),provincia:d.provincia||"",licencias:"",director_deportivo:"",analistas_primera:"",analista_juveniles:"",status:"Buscando Info",ultimo_contacto:"",informacion:"",creado:new Date().toISOString()});
+    await db.collection("ventas").doc(id).set({equipo:d.equipo,pais:d.pais,deporte:dep,liga:d.liga||"",nivel:nivelDeLiga(d.liga,dep),orden_liga:nivelDeLiga(d.liga,dep),provincia:d.provincia||"",licencias:"",director_deportivo:"",analistas_primera:"",analista_juveniles:"",status:"Buscando Info",ultimo_contacto:"",informacion:"",region:vRegion,creado:new Date().toISOString()});
     $("vEquipo").value="";$("vPais").value="";$("vLiga").value="";if(vDeporte!==dep){vDeporte=dep;try{localStorage.setItem("vDeporte",dep)}catch{}}v.hidden=true;vPendValid=null;
     go("v-"+id);
     pedirInvestigacion(id,d.equipo);
@@ -1223,7 +1245,7 @@ Si no existe o es ambiguo, valido=false y hasta 3 sugerencias reales parecidas.`
 const PF=[["equipo","pf-equipo"],["pais","pf-pais"],["deporte","pf-deporte"],["liga","pf-liga"],["nivel","pf-nivel"],["provincia","pf-provincia"],["licencias","pf-licencias"],["status","pf-status"],["ultimo_contacto","pf-ultimo"],["informacion","pf-info"]];
 let pLoaded=null;
 function renderProspect(v){
-  $("pNombre").textContent=v.equipo; $("pPais").textContent=[v.provincia,v.pais].filter(Boolean).join(" · ");
+  $("pNombre").textContent=v.equipo; $("pBack").textContent=regionDe(v)==="latam"?"← Ventas LATAM":"← Ventas UE"; $("pPais").textContent=[v.provincia,v.pais].filter(Boolean).join(" · ");
   $("pLiga").innerHTML=`${esc(vDepOf(v))} · ${esc(NIVEL_TXT(vNivel(v)))}${v.liga?" · "+esc(v.liga):""} · <span class="stchip" style="--c:var(${stVar(v.status)});cursor:default">${esc(stLabel(v.status))}</span>`;
   $("pf-status").innerHTML=VSTATUS.map(([s])=>`<option value="${esc(s)}">${esc(stLabel(s))}</option>`).join("");
   const editing=$("vProspect").contains(document.activeElement)&&document.activeElement.closest("#pForm");
@@ -1252,7 +1274,7 @@ function renderProspect(v){
       ${row("Fuentes",Array.isArray(r.fuentes)&&r.fuentes.length?r.fuentes.map(link).join(" · "):"")}
     </dl></div>`;
 }
-$("pBack").onclick=()=>go("ventas");
+$("pBack").onclick=()=>{const v=ventas.find(x=>x.id===(current||"").slice(2));go(v&&regionDe(v)==="latam"?"ventas-latam":"ventas")};
 $("pForm").addEventListener("submit",async e=>{
   e.preventDefault(); const id=current.slice(2); const patch={};
   PF.forEach(([k,fid])=>{patch[k]=$(fid).value.trim()});
@@ -1267,7 +1289,7 @@ async function pedirInvestigacion(id,nombre){
 $("pInvestigar").onclick=async()=>{const v=ventas.find(x=>x.id===current.slice(2));if(!v)return;const b=$("pInvestigar");b.disabled=true;
   await pedirInvestigacion(v.id,v.equipo); setTimeout(()=>b.disabled=false,5000)};
 $("pQuitar").onclick=async()=>{const id=current.slice(2);if(!confirmQuitar){confirmQuitar=true;renderView();$("pToolStatus").textContent="Vuelve a pulsar para confirmar.";return}
-  try{await db.collection("ventas").doc(id).delete();confirmQuitar=false;go("ventas")}catch{$("pToolStatus").textContent="No se pudo quitar."}};
+  const vq=ventas.find(x=>x.id===id);try{await db.collection("ventas").doc(id).delete();confirmQuitar=false;go(vq&&regionDe(vq)==="latam"?"ventas-latam":"ventas")}catch{$("pToolStatus").textContent="No se pudo quitar."}};
 $("pACliente").onclick=async()=>{const v=ventas.find(x=>x.id===current.slice(2));if(!v)return;const cid=vDocId(v.equipo,v.pais,v.deporte);
   if(clientes.find(c=>c.id===cid)){go(cid);return}
   try{await db.collection("clientes").doc(cid).set({nombre:v.equipo,pais:v.pais,liga:v.liga||v.investigacion?.liga_actual||"",ciudad:v.investigacion?.ciudad||v.provincia||"",tareas:{semanal:true,diario:true,recordatorio:true,partido:true},idioma:"es",creado:new Date().toISOString()});
@@ -1317,7 +1339,7 @@ $("userForm").addEventListener("submit",async e=>{e.preventDefault();
     const n=$("accessNote");n.hidden=false;n.innerHTML=`<div class="h">Estás en modo solo lectura</div><p>Puedes ver todo, pero no agregar ni editar. Para poder hacerlo, pídele al administrador que te cambie el rol a <b>editor</b> en Configuración → Usuarios. Después vuelve a entrar.</p>`}
   if(!db){$("clients").innerHTML=`<div class="empty">No se pudo conectar con la base de datos. Recarga la página.</div>`;return}
   db.collection("clientes").onSnapshot(s=>{clientes=s.docs.map(d=>({id:d.id,...d.data()}));cliLoaded=true;syncSubs();renderView()},()=>{});
-  db.collection("ventas").onSnapshot(s=>{ventas=s.docs.map(d=>({id:d.id,...d.data()}));ventasLoaded=true;if(current==="ventas"||(current||"").startsWith("v-"))renderView()},()=>{});
+  db.collection("ventas").onSnapshot(s=>{ventas=s.docs.map(d=>({id:d.id,...d.data()}));ventasLoaded=true;if((current||"").startsWith("ventas")||(current||"").startsWith("v-"))renderView()},()=>{});
   window.claude?.use?.("sample").then(s=>{sample=s});
   renderView();
   if(!isAdmin) $("btnRemove").hidden=true;
