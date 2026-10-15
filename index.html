@@ -990,7 +990,7 @@ async function writeMails(list){
 
 /* ================= VENTAS ================= */
 const RESEARCH_TRIGGER="trig_01VHEKM92PTaX7ACMyn2LLDs";
-const VSTATUS=[["Cerrado","--s-cer"],["Demo Piston","--s-dem"],["Presupuesto Enviado","--s-pre"],["Contacto","--s-con"],["Esp Respuesta","--s-esp"],["Buscando Info","--s-bus"],["Usan otro Soft","--s-otr"],["","--s-non"]];
+const VSTATUS=[["Clientes","--s-cer"],["Demo Piston","--s-dem"],["Presupuesto Enviado","--s-pre"],["Contacto","--s-con"],["Esp Respuesta","--s-esp"],["Buscando Info","--s-bus"],["Usan otro Soft","--s-otr"],["","--s-non"]];
 const stVar=st=>(VSTATUS.find(x=>x[0]===(st||""))||VSTATUS[VSTATUS.length-1])[1];
 const stLabel=st=>st||"Sin estado";
 let ventas=[], ventasLoaded=false, vFiltroSt=LS.get("vFiltroSt",null), vPendValid=null, confirmQuitar=false;
@@ -1293,7 +1293,7 @@ $("pQuitar").onclick=async()=>{const id=current.slice(2);if(!confirmQuitar){conf
 $("pACliente").onclick=async()=>{const v=ventas.find(x=>x.id===current.slice(2));if(!v)return;const cid=vDocId(v.equipo,v.pais,v.deporte);
   if(clientes.find(c=>c.id===cid)){go(cid);return}
   try{await db.collection("clientes").doc(cid).set({nombre:v.equipo,pais:v.pais,liga:v.liga||v.investigacion?.liga_actual||"",ciudad:v.investigacion?.ciudad||v.provincia||"",tareas:{semanal:true,diario:true,recordatorio:true,partido:true},idioma:"es",creado:new Date().toISOString()});
-    await db.collection("ventas").doc(v.id).update({status:"Cerrado"});
+    await db.collection("ventas").doc(v.id).update({status:"Clientes"});
     go(cid); pedirBusqueda({id:cid,nombre:v.equipo,pais:v.pais});
   }catch{$("pToolStatus").textContent="No se pudo pasar a clientes."}};
 
