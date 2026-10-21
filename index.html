@@ -221,6 +221,7 @@ footer{font-size:13px;color:var(--muted)}
 .idate.empty:not(:focus){opacity:.55}
 .idate.saved{border-color:color-mix(in srgb,var(--ok) 60%,transparent)}
 .vtable td.ed{min-width:150px}
+.vtable td.soft{min-width:150px}
 .vtable td.cct{min-width:220px;max-width:300px}
 #ccPanel li .cg{grid-column:1;font-size:12px;color:var(--muted)}
 #ccPanel form select{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
@@ -366,7 +367,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,syst
         <span class="vt-collapse"><button type="button" class="b" id="vExpandAll">Expandir todo</button><button type="button" class="b" id="vCollapseAll">Contraer todo</button></span>
       </div>
       <div class="tablewrap" id="vTableWrap"><table class="vtable">
-        <thead><tr><th>Equipo</th><th>Último contacto</th><th>Status</th><th>Información</th><th>Contactos</th></tr></thead>
+        <thead><tr id="vHead"><th>Equipo</th><th>Último contacto</th><th>Status</th><th>Información</th><th>Contactos</th></tr></thead>
         <tbody id="vRows"></tbody>
       </table></div>
       <div class="status" id="vStatus"></div>
@@ -392,6 +393,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,syst
         <div class="fld"><label for="pf-provincia">Provincia</label><input type="text" id="pf-provincia"></div>
         <div class="fld"><label for="pf-licencias">Licencias</label><input type="text" id="pf-licencias" inputmode="numeric"></div>
         <div class="fld"><label for="pf-status">Status</label><select id="pf-status"></select></div>
+        <div class="fld" id="pf-soft-wrap" hidden><label for="pf-soft">Otro Soft</label><input type="text" id="pf-soft" placeholder="Ej. Hudl · vence 09/2028"></div>
         <div class="fld"><label for="pf-ultimo">Último contacto</label><input type="date" id="pf-ultimo" style="font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 12px"></div>
         <div class="fld"><span class="flab">Contactos</span><div id="pc-contactos"></div></div>
       </div>
@@ -1157,17 +1159,20 @@ function renderVentas(){
   const cell=t=>t?esc(t).replace(/\n/g,"<br>"):`<span class="muted">—</span>`;
   vGroupKeys=keys.map(k=>vRegion+"|"+vDeporte+"|"+k);
   const ed=(v,f)=>canWrite?`<div class="ic" contenteditable="${CE}" role="textbox" aria-multiline="true" aria-label="${esc(f.replace(/_/g," "))} de ${esc(v.equipo)}" data-id="${esc(v.id)}" data-f="${f}">${esc(v[f]||"")}</div>`:cell(v[f]);
+  const SOFT="Usan otro Soft", conSoft=list.some(v=>v.status===SOFT), NC=conSoft?6:5;
+  vSetHead(conSoft);
   $("vRows").innerHTML=list.length?keys.map(k=>{const[n,pa,li]=k.split("|");
     const rows=groups[k].sort((a,b)=>order(a.status)-order(b.status)||a.equipo.localeCompare(b.equipo));
     const titulo=+n===9?`<span class="dv">Otras categorías</span>`:`<span class="dv">${esc(NIVEL_TXT(+n))}</span>${esc(li)}`;
     const gk=vRegion+"|"+vDeporte+"|"+k, abierto=!!q||!vCollapsed.has(gk);
-    return `<tr class="grp"><td colspan="5"><button type="button" class="grpbtn" data-g="${esc(gk)}" aria-expanded="${abierto}"><span class="chev" aria-hidden="true">▼</span><span>${titulo}${multiPais?` · ${esc(pa)}`:""} <span style="font:500 12px var(--f-body);text-transform:none;letter-spacing:0">(${rows.length})</span></span></button></td></tr>`+(abierto?rows.map(v=>`<tr class="vrow" style="--c:var(${stVar(v.status)})">
+    return `<tr class="grp"><td colspan="${NC}"><button type="button" class="grpbtn" data-g="${esc(gk)}" aria-expanded="${abierto}"><span class="chev" aria-hidden="true">▼</span><span>${titulo}${multiPais?` · ${esc(pa)}`:""} <span style="font:500 12px var(--f-body);text-transform:none;letter-spacing:0">(${rows.length})</span></span></button></td></tr>`+(abierto?rows.map(v=>`<tr class="vrow" style="--c:var(${stVar(v.status)})">
       <td class="eq"><button class="linkbtn" type="button" data-pr="${esc(v.id)}">${esc(v.equipo)}</button></td>
       <td class="nw" style="white-space:nowrap">${canWrite?`<input type="date" class="idate${v.ultimo_contacto?"":" empty"}" data-id="${esc(v.id)}" data-f="ultimo_contacto" value="${esc(v.ultimo_contacto||"")}" aria-label="Último contacto con ${esc(v.equipo)}">`:(v.ultimo_contacto?fmtFecha(v.ultimo_contacto):`<span class="muted">—</span>`)}</td>
       <td><select class="stsel" style="--c:var(${stVar(v.status)})" data-stid="${esc(v.id)}" aria-label="Status de ${esc(v.equipo)}" ${canWrite?"":"disabled"}>${VSTATUS.map(([s])=>`<option value="${esc(s)}"${(v.status||"")===s?" selected":""}>${esc(stLabel(s))}</option>`).join("")}</select></td>
+      ${conSoft?`<td class="soft">${v.status===SOFT?ed(v,"otro_soft"):""}</td>`:""}
       <td class="info">${ed(v,"informacion")}</td>
       <td class="ed cct">${ccell(v)}</td></tr>`).join(""):"")}).join("")
-    :`<tr><td colspan="5" class="muted" style="padding:18px">${enDep.length?"Ningún club coincide con el filtro.":enRegion.length?`Todavía no hay clubes de ${esc(vDeporte)}${curP?" en "+esc(curP):""}.`:`Todavía no hay clubes en ${latam?"Ventas LATAM":"Ventas UE"}. Agrega el primero con el formulario de arriba.`}</td></tr>`;
+    :`<tr><td colspan="${NC}" class="muted" style="padding:18px">${enDep.length?"Ningún club coincide con el filtro.":enRegion.length?`Todavía no hay clubes de ${esc(vDeporte)}${curP?" en "+esc(curP):""}.`:`Todavía no hay clubes en ${latam?"Ventas LATAM":"Ventas UE"}. Agrega el primero con el formulario de arriba.`}</td></tr>`;
   vBindRows();
 }
 function vBindRows(){
@@ -1191,6 +1196,8 @@ const vEd=(v,f)=>canWrite?`<div class="ic" contenteditable="${CE}" role="textbox
 let vOrden=LS.get("vOrden","az");
 $("vOrden").value=vOrden;
 $("vOrden").addEventListener("change",()=>{vOrden=$("vOrden").value;LS.set("vOrden",vOrden);renderVentas()});
+function vSetHead(soft){const h=$("vHead"),want=soft?"1":"";if(h.dataset.soft===want)return;h.dataset.soft=want;
+  h.innerHTML=`<th>Equipo</th><th>Último contacto</th><th>Status</th>${soft?"<th>Otro Soft</th>":""}<th>Información</th><th>Contactos</th>`}
 function renderClientesV(q){
   const enRegion=ventas.filter(v=>v.status==="Clientes");
   const pCount={}; enRegion.forEach(v=>{const p=v.pais||"Sin país";pCount[p]=(pCount[p]||0)+1});
@@ -1211,7 +1218,7 @@ function renderClientesV(q){
     deporte:(a,b)=>vDepOf(a).localeCompare(vDepOf(b),"es")||az(a,b)}[vOrden]||az;
   const groups={}; list.forEach(v=>{const p=v.pais||"Sin país";(groups[p]=groups[p]||[]).push(v)});
   const keys=Object.keys(groups).sort((a,b)=>a.localeCompare(b,"es"));
-  vGroupKeys=keys.map(k=>"clientes|"+k);
+  vGroupKeys=keys.map(k=>"clientes|"+k); vSetHead(false);
   $("vRows").innerHTML=list.length?keys.map(pa=>{
     const rows=groups[pa].sort(cmp), gk="clientes|"+pa, abierto=!!q||!vCollapsed.has(gk);
     return `<tr class="grp"><td colspan="5"><button type="button" class="grpbtn" data-g="${esc(gk)}" aria-expanded="${abierto}"><span class="chev" aria-hidden="true">▼</span><span><span class="dv">${esc(pa)}</span> <span style="font:500 12px var(--f-body);text-transform:none;letter-spacing:0">(${rows.length})</span></span></button></td></tr>`+(abierto?rows.map(v=>{
@@ -1294,11 +1301,12 @@ Si no existe o es ambiguo, valido=false y hasta 3 sugerencias reales parecidas.`
 });
 
 /* ---- ficha de prospecto ---- */
-const PF=[["equipo","pf-equipo"],["pais","pf-pais"],["deporte","pf-deporte"],["liga","pf-liga"],["nivel","pf-nivel"],["provincia","pf-provincia"],["licencias","pf-licencias"],["status","pf-status"],["ultimo_contacto","pf-ultimo"],["informacion","pf-info"]];
+const PF=[["equipo","pf-equipo"],["pais","pf-pais"],["deporte","pf-deporte"],["liga","pf-liga"],["nivel","pf-nivel"],["provincia","pf-provincia"],["licencias","pf-licencias"],["status","pf-status"],["otro_soft","pf-soft"],["ultimo_contacto","pf-ultimo"],["informacion","pf-info"]];
 let pLoaded=null;
 function renderProspect(v){
   $("pNombre").textContent=v.equipo; $("pBack").textContent={"ventas-clientes":"← Clientes","ventas-latam":"← Ventas LATAM","ventas":"← Ventas UE"}[vTabDe(v)]; $("pPais").textContent=[v.provincia,v.pais].filter(Boolean).join(" · ");
   $("pLiga").innerHTML=`${esc(vDepOf(v))} · ${esc(NIVEL_TXT(vNivel(v)))}${v.liga?" · "+esc(v.liga):""} · <span class="stchip" style="--c:var(${stVar(v.status)});cursor:default">${esc(stLabel(v.status))}</span>`;
+  const softSync=()=>{$("pf-soft-wrap").hidden=$("pf-status").value!=="Usan otro Soft"}; $("pf-status").onchange=softSync; setTimeout(softSync,0);
   $("pf-status").innerHTML=VSTATUS.map(([s])=>`<option value="${esc(s)}">${esc(stLabel(s))}</option>`).join("");
   const editing=$("vProspect").contains(document.activeElement)&&document.activeElement.closest("#pForm");
   if(pLoaded!==v.id||!editing){ PF.forEach(([k,id])=>{$(id).value=k==="nivel"?String(vNivel(v)):k==="deporte"?vDepOf(v):(v[k]??"")}); pLoaded=v.id; }
