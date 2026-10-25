@@ -222,9 +222,26 @@ footer{font-size:13px;color:var(--muted)}
 .idate.saved{border-color:color-mix(in srgb,var(--ok) 60%,transparent)}
 .vtable td.ed{min-width:150px}
 .vtable td.soft{min-width:150px}
+.vtable td.sw{min-width:170px}
+.vtable td.pv{min-width:150px;white-space:nowrap}
+.pv .pav{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:12px;color:var(--muted)}
+.pv .pav input{font-size:12px;padding:2px 4px}
+.pv .pdate{font:inherit;color:var(--fg);background:transparent;border:1px solid transparent;border-radius:6px;padding:3px 4px}
+.pv .pdate:hover,.pv .pdate:focus{border-color:var(--line);background:var(--bg)}
+.pv .pav button{background:none;border:0;color:var(--accent);cursor:pointer;font:600 12px var(--f-body);padding:0 2px}
+.pv .pst{display:inline-block;font:600 11px var(--f-body);border-radius:99px;padding:1px 7px;margin-top:4px}
+.pv .pst.warn{background:var(--warn-soft);color:var(--warn)}.pv .pst.bad{background:var(--bad-soft);color:var(--bad)}
+.swbtn{display:block;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:8px;padding:4px 6px;cursor:pointer;font:inherit;color:var(--fg)}
+.swbtn:hover,.swbtn[aria-expanded="true"]{border-color:var(--line);background:var(--bg)}
+.swbtn span{display:block;font-size:13px}
+#spPanel .prow{display:grid;grid-template-columns:auto 1fr 64px;cursor:pointer;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+#spPanel > .row{display:flex;gap:8px;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:12px}
+#spPanel .plist{display:grid;gap:6px;max-height:300px;overflow:auto}
+#spPanel .prow input[type=number]{width:64px;min-width:0;box-sizing:border-box;padding:5px 6px;justify-self:end}
+#spPanel .prow input[type=checkbox]{width:auto;margin:0}
 .vtable td.cct{min-width:220px;max-width:300px}
-#ccPanel li .cg{grid-column:1;font-size:12px;color:var(--muted)}
-#ccPanel form select{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+#ccPanel li .cg,#spPanel li .cg{grid-column:1;font-size:12px;color:var(--muted)}
+#ccPanel form select,#spPanel form select{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
 .vt-collapse{display:flex;gap:6px;margin-left:auto}
 .flab{font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .ccbtn{all:unset;box-sizing:border-box;display:flex;align-items:flex-start;gap:6px;width:100%;min-height:26px;padding:3px 6px;margin:-3px -6px;border-radius:6px;border:1px solid transparent;cursor:pointer;color:var(--fg);font:inherit;line-height:1.35}
@@ -237,24 +254,24 @@ footer{font-size:13px;color:var(--muted)}
 .ccbtn .car{color:var(--muted);font-size:10px;margin-top:3px;opacity:.45}
 .ccbtn:hover .car,.ccbtn[aria-expanded="true"] .car{opacity:1}
 .ccbtn .cn .muted{color:var(--muted)}
-#ccPanel{position:absolute;z-index:50;width:min(340px,calc(100vw - 32px));background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.28);padding:14px;display:grid;gap:12px}
-#ccPanel .ch{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-#ccPanel .ch b{font:600 12px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-#ccPanel .ch span{font-size:13px;color:var(--muted)}
-#ccPanel ul{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-height:260px;overflow:auto}
-#ccPanel li{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
-#ccPanel li .nm{font-weight:600;overflow-wrap:anywhere}
-#ccPanel li .ln{grid-column:1;display:flex;flex-wrap:wrap;gap:4px 10px;font-size:13px}
-#ccPanel li .ln a{color:var(--accent);text-decoration:none}
-#ccPanel li .ln a:hover{text-decoration:underline}
-#ccPanel li .ac{grid-column:2;grid-row:1/span 2;display:flex;gap:2px;align-items:flex-start}
-#ccPanel li .ac button{all:unset;cursor:pointer;color:var(--muted);padding:2px 6px;border-radius:6px;font-size:14px}
-#ccPanel li .ac button:hover{color:var(--fg);background:var(--surface)}
-#ccPanel li .ac button:focus-visible{outline:2px solid var(--accent)}
-#ccPanel form{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px}
-#ccPanel form input{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;box-sizing:border-box}
-#ccPanel form .row{display:flex;gap:8px;justify-content:flex-end;align-items:center}
-#ccPanel .empty2{font-size:14px;color:var(--muted)}
+#ccPanel,#spPanel{position:absolute;z-index:50;width:min(340px,calc(100vw - 32px));background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.28);padding:14px;display:grid;gap:12px}
+#ccPanel .ch,#spPanel .ch{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+#ccPanel .ch b,#spPanel .ch b{font:600 12px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+#ccPanel .ch span,#spPanel .ch span{font-size:13px;color:var(--muted)}
+#ccPanel ul,#spPanel ul{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-height:260px;overflow:auto}
+#ccPanel li,#spPanel li{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+#ccPanel li .nm,#spPanel li .nm{font-weight:600;overflow-wrap:anywhere}
+#ccPanel li .ln,#spPanel li .ln{grid-column:1;display:flex;flex-wrap:wrap;gap:4px 10px;font-size:13px}
+#ccPanel li .ln a,#spPanel li .ln a{color:var(--accent);text-decoration:none}
+#ccPanel li .ln a:hover,#spPanel li .ln a:hover{text-decoration:underline}
+#ccPanel li .ac,#spPanel li .ac{grid-column:2;grid-row:1/span 2;display:flex;gap:2px;align-items:flex-start}
+#ccPanel li .ac button,#spPanel li .ac button{all:unset;cursor:pointer;color:var(--muted);padding:2px 6px;border-radius:6px;font-size:14px}
+#ccPanel li .ac button:hover,#spPanel li .ac button:hover{color:var(--fg);background:var(--surface)}
+#ccPanel li .ac button:focus-visible,#spPanel li .ac button:focus-visible{outline:2px solid var(--accent)}
+#ccPanel form,#spPanel form{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+#ccPanel form input,#spPanel form input{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;box-sizing:border-box}
+#ccPanel form .row,#spPanel form .row{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+#ccPanel .empty2,#spPanel .empty2{font-size:14px;color:var(--muted)}
 .vt-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .vt-filters input[type=text]{max-width:260px}
 .vt-filters select{width:auto}
@@ -363,7 +380,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,syst
         <input type="text" id="vBuscar" placeholder="Buscar club, persona o nota" aria-label="Buscar">
         
         <span id="vStChips" class="vt-filters"></span>
-        <label id="vOrdenWrap" hidden style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">Ordenar <select id="vOrden" aria-label="Ordenar clientes"><option value="az">A-Z</option><option value="za">Z-A</option><option value="liga">Liga / división</option><option value="reciente">Último contacto (reciente)</option><option value="antiguo">Último contacto (antiguo)</option><option value="licencias">Licencias</option><option value="deporte">Deporte</option></select></label>
+        <label id="vOrdenWrap" hidden style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">Ordenar <select id="vOrden" aria-label="Ordenar clientes"><option value="az">A-Z</option><option value="za">Z-A</option><option value="liga">Liga / división</option><option value="reciente">Último contacto (reciente)</option><option value="antiguo">Último contacto (antiguo)</option><option value="licencias">Licencias</option><option value="deporte">Deporte</option><option value="vence">Próximo vencimiento</option></select></label>
         <span class="vt-collapse"><button type="button" class="b" id="vExpandAll">Expandir todo</button><button type="button" class="b" id="vCollapseAll">Contraer todo</button></span>
       </div>
       <div class="tablewrap" id="vTableWrap"><table class="vtable">
@@ -485,6 +502,16 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,syst
       <div class="status" id="mailStatus"></div>
       <p class="sub" style="font-size:13px">El recordatorio de las 13:51 llega siempre a juan.traverso@fulcrumtec.com, sin importar esta lista.</p>
     </section>
+    <section class="add" id="prodBox">
+      <h2 style="margin:0">Productos de Fulcrum <small>software contratado</small></h2>
+      <p class="sub" style="font-size:14px">Estos productos aparecen en la solapa Clientes, en “Software contratado”. Cada licencia avisa por correo, por defecto 2 meses antes de su fecha de fin (a los destinatarios del correo diario).</p>
+      <div class="sugg" id="prodList"></div>
+      <form class="addrow" id="prodForm" style="grid-template-columns:1fr auto" autocomplete="off">
+        <div class="fld"><label for="inProd">Agregar producto</label><input type="text" id="inProd" placeholder="Ej. Piston One"></div>
+        <button class="b" type="submit">Agregar</button>
+      </form>
+      <div class="status" id="prodStatus"></div>
+    </section>
     <section class="add" id="usersBox" style="display:grid;gap:12px" hidden>
       <div class="lab">Usuarios con acceso</div>
       <p class="sub" style="font-size:14px;margin:0">Agrega el email de la persona y su rol. Después, esa persona entra a la página, toca <b>Crear cuenta</b> con ese mismo email y elige su contraseña. <b>Administrador</b>: todo, incluidos los usuarios. <b>Editor</b>: todo menos usuarios. <b>Lector</b>: solo ver.</p>
@@ -571,7 +598,7 @@ function badgeDia(p){const r=diaRel(p); if(!r) return ""; return `<span class="b
 function whenText(p){const d=parseDate(p.fecha);return p.fecha_confirmada?`${d.getDate()} de ${MESES[d.getMonth()]}${p.hora?" · "+p.hora:""}`:`Semana del ${d.getDate()} de ${MESES[d.getMonth()]} · a confirmar`}
 
 /* ---------- Router ---------- */
-function go(id){ if(typeof cerrarContactos==="function"&&document.getElementById("ccPanel")) cerrarContactos(); current=id; confirmRemove=false; try{history.replaceState(null,"",id?"#"+id:location.pathname)}catch{} restoreY=null; renderView(); window.scrollTo(0,0); SS.set("vista",current||"");SS.set("scrollPos",{view:current||"",y:0}) }
+function go(id){ if(typeof cerrarContactos==="function"&&document.getElementById("ccPanel")) cerrarContactos(); if(document.getElementById("spPanel")) cerrarSoftware(); current=id; confirmRemove=false; try{history.replaceState(null,"",id?"#"+id:location.pathname)}catch{} restoreY=null; renderView(); window.scrollTo(0,0); SS.set("vista",current||"");SS.set("scrollPos",{view:current||"",y:0}) }
 let isOwner=false, isAdmin=false;
 /* ---- conservar la posición: al refrescar datos y al recargar la página ---- */
 try{history.scrollRestoration="manual"}catch{}
@@ -988,6 +1015,21 @@ function renderMail(){
   $("mailList").innerHTML=mails.length?mails.map((m,i)=>`<span class="chip c-env" style="display:inline-flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0;font-size:13px;padding:6px 10px">${esc(m)}<button type="button" data-rm="${i}" aria-label="Quitar ${esc(m)}" style="background:none;border:0;color:inherit;cursor:pointer;font:600 14px var(--f-body);padding:0">×</button></span>`).join(""):`<span class="status">Nadie todavía. Agrega al menos una dirección.</span>`;
   $("mailList").querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>writeMails(mails.filter((_,i)=>i!==+b.dataset.rm)));
 }
+function setupProductos(){
+  db.doc("config/productos").onSnapshot(s=>{const l=s.data()?.lista;if(Array.isArray(l)){PRODUCTOS=l.filter(Boolean);LS.set("productosCache",PRODUCTOS)}renderProdCfg();if(current==="ventas-clientes")renderView()},()=>{});
+  $("prodForm").addEventListener("submit",async e=>{e.preventDefault();const v=$("inProd").value.trim();if(!v)return;
+    if(PRODUCTOS.some(x=>x.toLowerCase()===v.toLowerCase())){$("prodStatus").textContent="Ya está en la lista.";return}
+    await writeProds([...PRODUCTOS,v]);$("inProd").value=""});
+}
+function renderProdCfg(){
+  const el=$("prodList"); if(!el) return;
+  el.innerHTML=PRODUCTOS.map((m,i)=>`<span class="chip c-env" style="display:inline-flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0;font-size:13px;padding:6px 10px">${esc(m)}<button type="button" data-rmp="${i}" aria-label="Quitar ${esc(m)}" style="background:none;border:0;color:inherit;cursor:pointer;font:600 14px var(--f-body);padding:0">×</button></span>`).join("")||`<span class="status">Todavía no hay productos.</span>`;
+  el.querySelectorAll("[data-rmp]").forEach(b=>b.onclick=()=>writeProds(PRODUCTOS.filter((_,i)=>i!==+b.dataset.rmp)));
+}
+async function writeProds(list){
+  try{await db.doc("config/productos").set({lista:list});PRODUCTOS=list;LS.set("productosCache",list);renderProdCfg();$("prodStatus").textContent="Guardado."}
+  catch{$("prodStatus").textContent="No se guardó. Inténtalo de nuevo."}
+}
 async function writeMails(list){
   try{await db.doc("config/correo").update({destinatarios:list});$("mailStatus").textContent="Guardado."}
   catch{$("mailStatus").textContent="No se guardó. Inténtalo de nuevo."}
@@ -1025,7 +1067,7 @@ let vCollapsed=new Set((()=>{try{return JSON.parse(localStorage.getItem("vCollap
 function saveCollapsed(){try{localStorage.setItem("vCollapsed",JSON.stringify([...vCollapsed]))}catch{}}
 let vRenderPending=false, vGroupKeys=[];
 const CE=(()=>{const d=document.createElement("div");try{d.contentEditable="plaintext-only"}catch{};return d.contentEditable==="plaintext-only"?"plaintext-only":"true"})();
-const vEditing=()=>{const a=document.activeElement;return !!(a&&(($("vRows").contains(a)&&a.matches(".ic,.idate"))||(document.getElementById("ccPanel")?.contains(a))))||!!document.getElementById("ccPanel")};
+const vEditing=()=>{const a=document.activeElement;return !!(a&&(($("vRows").contains(a)&&a.matches(".ic,.idate,.pdate"))||(document.getElementById("ccPanel")?.contains(a))))||!!document.getElementById("ccPanel")||!!document.getElementById("spPanel")};
 let vDeporte=(()=>{try{return localStorage.getItem("vDeporte")||"Fútbol"}catch{return "Fútbol"}})();
 
 /* ---- contactos (un solo campo con cargo) ---- */
@@ -1196,8 +1238,67 @@ const vEd=(v,f)=>canWrite?`<div class="ic" contenteditable="${CE}" role="textbox
 let vOrden=LS.get("vOrden","az");
 $("vOrden").value=vOrden;
 $("vOrden").addEventListener("change",()=>{vOrden=$("vOrden").value;LS.set("vOrden",vOrden);renderVentas()});
-function vSetHead(soft){const h=$("vHead"),want=soft?"1":"";if(h.dataset.soft===want)return;h.dataset.soft=want;
-  h.innerHTML=`<th>Equipo</th><th>Último contacto</th><th>Status</th>${soft?"<th>Otro Soft</th>":""}<th>Información</th><th>Contactos</th>`}
+function vSetHead(soft,prods){const h=$("vHead"),want=(soft?"1":"")+"|"+(prods?"S|"+prods.join("|"):"");if(h.dataset.soft===want)return;h.dataset.soft=want;
+  h.innerHTML=`<th>Equipo</th><th>Último contacto</th><th>Status</th>${soft?"<th>Otro Soft</th>":""}${prods?`<th>Software contratado</th>${prods.map(pn=>`<th>${esc(pn)} · fin licencia</th>`).join("")}`:""}<th>Información</th><th>Contactos</th>`}
+/* ---- software contratado (solapa Clientes) ---- */
+let PRODUCTOS=LS.get("productosCache",["Piston One","Piston Mac","Angles","Angles RT","Antenas"]);
+const vProds=v=>Array.isArray(v.productos)?v.productos.filter(x=>x&&x.nombre):[];
+function masMeses(iso,m){if(!iso)return "";const d=new Date(iso+"T12:00:00");if(isNaN(d))return "";const day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+m);const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();d.setDate(Math.min(day,last));return d.toISOString().slice(0,10)}
+const avisoDe=x=>x.aviso||masMeses(x.vence,-2);
+const hoyISO=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+const vProxVence=v=>vProds(v).map(x=>x.vence).filter(Boolean).sort()[0]||"";
+function swCell(v){
+  const L=vProds(v);
+  const inner=L.length?L.map(x=>`<span>${esc(x.nombre)}${x.cantidad>1?` ×${x.cantidad}`:""}</span>`).join(""):`<span class="muted">${canWrite?"+ Agregar":"—"}</span>`;
+  return canWrite?`<button type="button" class="swbtn" data-sp="${esc(v.id)}" aria-haspopup="dialog" aria-expanded="false" aria-label="Software contratado de ${esc(v.equipo)}">${inner}</button>`:inner;
+}
+function pvCell(v,pn){
+  const x=vProds(v).find(y=>y.nombre===pn); if(!x) return "";
+  const hoy=hoyISO(), av=avisoDe(x);
+  const st=x.vence&&x.vence<hoy?`<span class="pst bad">Vencida</span>`:av&&av<=hoy?`<span class="pst warn">Por vencer</span>`:"";
+  if(!canWrite) return `${x.vence?fmtFecha(x.vence):`<span class="muted">Sin fecha</span>`}${av?`<div class="pav">Aviso: ${fmtFecha(av)}</div>`:""}${st}`;
+  return `<input type="date" class="pdate${x.vence?"":" empty"}" data-pid="${esc(v.id)}" data-prod="${esc(pn)}" data-k="vence" value="${esc(x.vence||"")}" aria-label="Fin de licencia de ${esc(pn)} de ${esc(v.equipo)}">
+    ${x.vence?`<div class="pav">Aviso <input type="date" class="pdate" data-pid="${esc(v.id)}" data-prod="${esc(pn)}" data-k="aviso" value="${esc(av)}" aria-label="Fecha de aviso de ${esc(pn)} de ${esc(v.equipo)}">${x.aviso?`<button type="button" data-avreset="${esc(v.id)}" data-prod="${esc(pn)}" title="Volver a 2 meses antes">↺</button>`:""}</div>`:""}${st}`;
+}
+async function guardarProds(v,L){
+  const prev=v.productos; v.productos=L;
+  try{await db.collection("ventas").doc(v.id).update({productos:L});$("vStatus").textContent=`Guardado: ${v.equipo}.`}
+  catch{v.productos=prev;$("vStatus").textContent="No se guardó. Inténtalo de nuevo."}
+}
+let spOpen=null;
+function cerrarSoftware(){const p=$("spPanel");if(p)p.remove();if(spOpen?.btn)spOpen.btn.setAttribute("aria-expanded","false");const b=spOpen?.btn;spOpen=null;if(vRenderPending)setTimeout(()=>{if(!vEditing())renderVentas()},0);return b}
+function abrirSoftware(btn){
+  const same=spOpen&&spOpen.btn===btn; cerrarSoftware(); if(same) return;
+  const v=ventas.find(x=>x.id===btn.dataset.sp); if(!v) return;
+  spOpen={id:v.id,btn}; btn.setAttribute("aria-expanded","true");
+  const L=vProds(v), nombres=[...new Set([...PRODUCTOS,...L.map(x=>x.nombre)])];
+  const p=document.createElement("div"); p.id="spPanel"; p.setAttribute("role","dialog"); p.setAttribute("aria-label","Software contratado");
+  p.innerHTML=`<div class="ch"><b>Software contratado</b><span>${esc(v.equipo)}</span></div>
+    <div class="plist">${nombres.map((n,i)=>{const x=L.find(y=>y.nombre===n);return `<label class="prow"><input type="checkbox" data-i="${i}"${x?" checked":""}><span>${esc(n)}</span><input type="number" min="1" step="1" data-q="${i}" value="${esc(String(x?.cantidad||1))}" aria-label="Cantidad de ${esc(n)}"${x?"":" disabled"}></label>`}).join("")}</div>
+    <div class="row"><span class="status" id="spStatus">Marca los productos y la cantidad de licencias.</span><button class="b primary" type="button" id="spOk">Guardar</button></div>`;
+  document.body.appendChild(p);
+  p.querySelectorAll("[data-i]").forEach(c=>c.onchange=()=>{const q=p.querySelector(`[data-q="${c.dataset.i}"]`);q.disabled=!c.checked;if(c.checked)q.focus()});
+  $("spOk").onclick=()=>{
+    const out=[]; nombres.forEach((n,i)=>{if(!p.querySelector(`[data-i="${i}"]`).checked)return;const old=L.find(y=>y.nombre===n)||{};const q=Math.max(1,parseInt(p.querySelector(`[data-q="${i}"]`).value,10)||1);out.push({...old,nombre:n,cantidad:q,vence:old.vence||"",...(old.aviso?{aviso:old.aviso}:{})})});
+    cerrarSoftware(); guardarProds(v,out).then(()=>renderVentas());
+  };
+  const r=btn.getBoundingClientRect(), w=p.offsetWidth; let left=r.left+window.scrollX; left=Math.max(16+window.scrollX,Math.min(left,window.scrollX+document.documentElement.clientWidth-w-16));
+  p.style.left=left+"px"; p.style.top=(r.bottom+window.scrollY+6)+"px";
+  const f=p.querySelector("input"); if(f) f.focus();
+}
+document.addEventListener("click",e=>{const p=$("spPanel");if(p&&!p.contains(e.target)&&!e.target.closest("[data-sp]"))cerrarSoftware()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("spPanel")){const b=cerrarSoftware();if(b&&document.body.contains(b))b.focus()}});
+function bindSoftware(){
+  $("vRows").querySelectorAll("[data-sp]").forEach(b=>b.onclick=e=>{e.stopPropagation();abrirSoftware(b)});
+  $("vRows").querySelectorAll(".pdate").forEach(el=>el.addEventListener("change",()=>{
+    const v=ventas.find(x=>x.id===el.dataset.pid); if(!v) return;
+    const L=vProds(v).map(x=>({...x})); const x=L.find(y=>y.nombre===el.dataset.prod); if(!x) return;
+    if(el.dataset.k==="vence"){x.vence=el.value; if(!el.value) delete x.aviso;} else { if(el.value&&el.value!==masMeses(x.vence,-2)) x.aviso=el.value; else delete x.aviso; }
+    guardarProds(v,L).then(()=>{if(vEditing())vRenderPending=true;else renderVentas()});
+  }));
+  $("vRows").querySelectorAll(".pdate").forEach(el=>el.addEventListener("blur",()=>{if(vRenderPending)setTimeout(()=>{if(!vEditing())renderVentas()},0)}));
+  $("vRows").querySelectorAll("[data-avreset]").forEach(b=>b.onclick=()=>{const v=ventas.find(x=>x.id===b.dataset.avreset);if(!v)return;const L=vProds(v).map(x=>({...x}));const x=L.find(y=>y.nombre===b.dataset.prod);if(x)delete x.aviso;guardarProds(v,L).then(()=>renderVentas())});
+}
 function renderClientesV(q){
   const enRegion=ventas.filter(v=>v.status==="Clientes");
   const pCount={}; enRegion.forEach(v=>{const p=v.pais||"Sin país";pCount[p]=(pCount[p]||0)+1});
@@ -1215,22 +1316,28 @@ function renderClientesV(q){
     reciente:(a,b)=>(b.ultimo_contacto||"").localeCompare(a.ultimo_contacto||"")||az(a,b),
     antiguo:(a,b)=>((a.ultimo_contacto||"9999")).localeCompare(b.ultimo_contacto||"9999")||az(a,b),
     licencias:(a,b)=>num(b.licencias)-num(a.licencias)||az(a,b),
-    deporte:(a,b)=>vDepOf(a).localeCompare(vDepOf(b),"es")||az(a,b)}[vOrden]||az;
+    deporte:(a,b)=>vDepOf(a).localeCompare(vDepOf(b),"es")||az(a,b),
+    vence:(a,b)=>(vProxVence(a)||"9999").localeCompare(vProxVence(b)||"9999")||az(a,b)}[vOrden]||az;
   const groups={}; list.forEach(v=>{const p=v.pais||"Sin país";(groups[p]=groups[p]||[]).push(v)});
   const keys=Object.keys(groups).sort((a,b)=>a.localeCompare(b,"es"));
-  vGroupKeys=keys.map(k=>"clientes|"+k); vSetHead(false);
+  vGroupKeys=keys.map(k=>"clientes|"+k);
+  const prodCols=[...new Set([...PRODUCTOS.filter(pn=>list.some(v=>vProds(v).some(x=>x.nombre===pn))),...list.flatMap(v=>vProds(v).map(x=>x.nombre))])];
+  const NC=6+prodCols.length;
+  vSetHead(false,prodCols);
   $("vRows").innerHTML=list.length?keys.map(pa=>{
     const rows=groups[pa].sort(cmp), gk="clientes|"+pa, abierto=!!q||!vCollapsed.has(gk);
-    return `<tr class="grp"><td colspan="5"><button type="button" class="grpbtn" data-g="${esc(gk)}" aria-expanded="${abierto}"><span class="chev" aria-hidden="true">▼</span><span><span class="dv">${esc(pa)}</span> <span style="font:500 12px var(--f-body);text-transform:none;letter-spacing:0">(${rows.length})</span></span></button></td></tr>`+(abierto?rows.map(v=>{
+    return `<tr class="grp"><td colspan="${NC}"><button type="button" class="grpbtn" data-g="${esc(gk)}" aria-expanded="${abierto}"><span class="chev" aria-hidden="true">▼</span><span><span class="dv">${esc(pa)}</span> <span style="font:500 12px var(--f-body);text-transform:none;letter-spacing:0">(${rows.length})</span></span></button></td></tr>`+(abierto?rows.map(v=>{
       const meta=[v.liga||(vNivel(v)===9?"Otras categorías":""),vDepOf(v)!=="Fútbol"?vDepOf(v):"",v.licencias?"Licencias: "+v.licencias:""].filter(Boolean).join(" · ");
       return `<tr class="vrow" style="--c:var(${stVar(v.status)})">
       <td class="eq"><button class="linkbtn" type="button" data-pr="${esc(v.id)}">${esc(v.equipo)}</button>${meta?`<span class="sub2">${esc(meta)}</span>`:""}</td>
       <td class="nw" style="white-space:nowrap">${canWrite?`<input type="date" class="idate${v.ultimo_contacto?"":" empty"}" data-id="${esc(v.id)}" data-f="ultimo_contacto" value="${esc(v.ultimo_contacto||"")}" aria-label="Último contacto con ${esc(v.equipo)}">`:(v.ultimo_contacto?fmtFecha(v.ultimo_contacto):`<span class="muted">—</span>`)}</td>
       <td><select class="stsel" style="--c:var(${stVar(v.status)})" data-stid="${esc(v.id)}" aria-label="Status de ${esc(v.equipo)}" ${canWrite?"":"disabled"}>${VSTATUS.map(([s])=>`<option value="${esc(s)}"${(v.status||"")===s?" selected":""}>${esc(stLabel(s))}</option>`).join("")}</select></td>
+      <td class="sw">${swCell(v)}</td>
+      ${prodCols.map(pn=>`<td class="pv">${pvCell(v,pn)}</td>`).join("")}
       <td class="info">${vEd(v,"informacion")}</td>
       <td class="ed cct">${ccell(v)}</td></tr>`}).join(""):"")}).join("")
-    :`<tr><td colspan="5" class="muted" style="padding:18px">${enRegion.length?"Ningún cliente coincide con la búsqueda.":"Todavía no hay clientes. Cuando en Ventas UE o Ventas LATAM cambies el status de un club a Clientes, aparece aquí."}</td></tr>`;
-  vBindRows();
+    :`<tr><td colspan="${NC}" class="muted" style="padding:18px">${enRegion.length?"Ningún cliente coincide con la búsqueda.":"Todavía no hay clientes. Cuando en Ventas UE o Ventas LATAM cambies el status de un club a Clientes, aparece aquí."}</td></tr>`;
+  vBindRows(); bindSoftware();
 }
 async function vGuardarCelda(el){
   const isDate=el.classList.contains("idate");
@@ -1404,6 +1511,7 @@ $("userForm").addEventListener("submit",async e=>{e.preventDefault();
   renderView();
   if(!isAdmin) $("btnRemove").hidden=true;
   if(isAdmin) setupMail();
+  if(canWrite) setupProductos();
   cargarUsuarios();
   if(isOwner){ touch(); document.addEventListener("click",touch,{passive:true}); document.addEventListener("visibilitychange",()=>{if(!document.hidden)touch()}); }
   if(canWrite) $("btnUpdate").hidden=false;
