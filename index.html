@@ -13,7 +13,7 @@
   --bg:#f3f5f9; --surface:#ffffff; --fg:#141a26; --muted:#5b6475; --line:#dde2eb;
   --accent:#1d3fa6; --accent-soft:#e3e9f8; --hero:#10204f; --on-hero:#ffffff; --on-accent:#ffffff;
   --ok:#1b7a44; --ok-soft:#e1f2e8; --hoy:#15803d; --hoy-soft:#dcfce7; --man:#c2410c; --man-soft:#ffedd5; --on-dia:#ffffff; --warn:#9a6200; --warn-soft:#fbefd6; --bad:#b3261e; --bad-soft:#f9e1df;
-  --s-cer:#1b7a44; --s-dem:#6d3fc0; --s-pre:#b55a00; --s-con:#1d5fbf; --s-esp:#0b7f8c; --s-bus:#8a6a00; --s-otr:#b3261e; --s-non:#5b6475;
+  --e-ful:#7c3aed; --e-hudl:#ea580c; --e-nac:#dc2626; --e-lon:#166534; --e-myva:#d97706; --e-cat:#6b7280; --e-otra:#1d5fbf; --s-cer:#1b7a44; --s-dem:#6d3fc0; --s-pre:#b55a00; --s-con:#1d5fbf; --s-esp:#0b7f8c; --s-bus:#8a6a00; --s-otr:#b3261e; --s-non:#5b6475;
   --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --f-body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
@@ -21,11 +21,11 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0c111c; --surface:#141b2b; --fg:#e6eaf2; --muted:#96a0b4; --line:#26304a;
   --accent:#7f9cf5; --accent-soft:#1c2748; --hero:#1d3fa6; --on-hero:#ffffff; --on-accent:#0c111c;
-  --ok:#6fd49a; --ok-soft:#14301f; --hoy:#4ade80; --hoy-soft:#0f2e1b; --man:#fb923c; --man-soft:#3a2210; --on-dia:#0c111c; --s-cer:#6fd49a; --s-dem:#b79cf5; --s-pre:#f5a65b; --s-con:#86b4f5; --s-esp:#5fd3df; --s-bus:#e8c75a; --s-otr:#f28b82; --s-non:#96a0b4; --warn:#f0c064; --warn-soft:#352812; --bad:#f28b82; --bad-soft:#3a1a18; color-scheme:dark}}
+  --e-ful:#a78bfa; --e-hudl:#fb923c; --e-nac:#f87171; --e-lon:#4ade80; --e-myva:#fdba74; --e-cat:#9ca3af; --e-otra:#7f9cf5; --ok:#6fd49a; --ok-soft:#14301f; --hoy:#4ade80; --hoy-soft:#0f2e1b; --man:#fb923c; --man-soft:#3a2210; --on-dia:#0c111c; --s-cer:#6fd49a; --s-dem:#b79cf5; --s-pre:#f5a65b; --s-con:#86b4f5; --s-esp:#5fd3df; --s-bus:#e8c75a; --s-otr:#f28b82; --s-non:#96a0b4; --warn:#f0c064; --warn-soft:#352812; --bad:#f28b82; --bad-soft:#3a1a18; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0c111c; --surface:#141b2b; --fg:#e6eaf2; --muted:#96a0b4; --line:#26304a;
   --accent:#7f9cf5; --accent-soft:#1c2748; --hero:#1d3fa6; --on-hero:#ffffff; --on-accent:#0c111c;
-  --ok:#6fd49a; --ok-soft:#14301f; --hoy:#4ade80; --hoy-soft:#0f2e1b; --man:#fb923c; --man-soft:#3a2210; --on-dia:#0c111c; --s-cer:#6fd49a; --s-dem:#b79cf5; --s-pre:#f5a65b; --s-con:#86b4f5; --s-esp:#5fd3df; --s-bus:#e8c75a; --s-otr:#f28b82; --s-non:#96a0b4; --warn:#f0c064; --warn-soft:#352812; --bad:#f28b82; --bad-soft:#3a1a18; color-scheme:dark}
+  --e-ful:#a78bfa; --e-hudl:#fb923c; --e-nac:#f87171; --e-lon:#4ade80; --e-myva:#fdba74; --e-cat:#9ca3af; --e-otra:#7f9cf5; --ok:#6fd49a; --ok-soft:#14301f; --hoy:#4ade80; --hoy-soft:#0f2e1b; --man:#fb923c; --man-soft:#3a2210; --on-dia:#0c111c; --s-cer:#6fd49a; --s-dem:#b79cf5; --s-pre:#f5a65b; --s-con:#86b4f5; --s-esp:#5fd3df; --s-bus:#e8c75a; --s-otr:#f28b82; --s-non:#96a0b4; --warn:#f0c064; --warn-soft:#352812; --bad:#f28b82; --bad-soft:#3a1a18; color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
 .wrap{max-width:1480px;margin:0 auto;padding-inline:clamp(16px,4vw,56px);padding-block:28px 56px;display:grid;gap:26px}
 header{display:grid;gap:6px}
@@ -1046,12 +1046,12 @@ const VSTATUS=[["Clientes","--s-cer"],["Demo Piston","--s-dem"],["Presupuesto En
 const stVar=st=>(VSTATUS.find(x=>x[0]===(st||""))||VSTATUS[VSTATUS.length-1])[1];
 const stLabel=st=>st||"Sin estado";
 /* ---- empresa contratada (reemplaza al status) ---- */
-const EMPRESAS=[["Fulcrum","--s-cer"],["HUDL","--s-otr"],["Nac Sports","--s-pre"],["MyVa","--s-dem"],["Longomatch","--s-esp"],["Catapult","--s-con"]];
+const EMPRESAS=[["Fulcrum","--e-ful"],["HUDL","--e-hudl"],["Nac Sports","--e-nac"],["MyVa","--e-myva"],["Longomatch","--e-lon"],["Catapult","--e-cat"]];
 const empKey=t=>(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
 const empNorm=e=>{const t=(e||"").trim();if(!t)return "";const f=EMPRESAS.find(([n])=>empKey(n)===empKey(t));return f?f[0]:t};
 const empOf=v=>empNorm(v.empresa);
 const esFulcrum=v=>empOf(v)==="Fulcrum";
-const empVar=e=>{e=empNorm(e);if(!e)return "--s-non";const f=EMPRESAS.find(x=>x[0]===e);return f?f[1]:"--s-bus"};
+const empVar=e=>{e=empNorm(e);if(!e)return "--s-non";const f=EMPRESAS.find(x=>x[0]===e);return f?f[1]:"--e-otra"};
 const empLabel=e=>empNorm(e)||"Sin empresa";
 const empOrden=e=>{e=empNorm(e);if(!e)return 99;const i=EMPRESAS.findIndex(x=>x[0]===e);return i<0?50:i};
 function empSelect(v){
