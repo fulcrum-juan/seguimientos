@@ -223,6 +223,10 @@ footer{font-size:13px;color:var(--muted)}
 .vtable td.ed{min-width:150px}
 .vtable td.soft{min-width:150px}
 .vtable td.sw{min-width:170px}
+.vtable td.vc{min-width:150px}
+.vtable td.vc .pst{display:inline-block;font:600 11px var(--f-body);border-radius:99px;padding:1px 7px;margin-top:4px}
+.vtable td.vc .pst.warn{background:var(--warn-soft);color:var(--warn)}.vtable td.vc .pst.bad{background:var(--bad-soft);color:var(--bad)}
+.empin{font:inherit;font-size:13px;width:100%;max-width:180px;padding:6px 8px;border:1px solid var(--accent);border-radius:8px;background:var(--bg);color:var(--fg)}
 .vtable td.pv{min-width:150px;white-space:nowrap}
 .pv .pav{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:12px;color:var(--muted)}
 .pv .pav input{font-size:12px;padding:2px 4px}
@@ -375,7 +379,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,syst
       <h2>Seguimiento <small id="vCount"></small></h2>
       <div class="seg sportbar paisbar" id="vPaises" role="group" aria-label="País"></div>
       <div class="seg sportbar" id="vDeportes" role="group" aria-label="Deporte"></div>
-      <datalist id="vDepList"></datalist><datalist id="vLigaList"></datalist>
+      <datalist id="vDepList"></datalist><datalist id="vEmpList"><option value="Fulcrum"><option value="HUDL"><option value="Nac Sports"><option value="MyVa"><option value="Longomatch"><option value="Catapult"></datalist><datalist id="vLigaList"></datalist>
       <div class="vt-filters">
         <input type="text" id="vBuscar" placeholder="Buscar club, persona o nota" aria-label="Buscar">
         
@@ -409,8 +413,8 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,syst
         <div class="fld"><label for="pf-nivel">División</label><select id="pf-nivel"><option value="0">Federación</option><option value="1">1ª división</option><option value="2">2ª división</option><option value="3">3ª división</option><option value="9">Otras categorías</option></select></div>
         <div class="fld"><label for="pf-provincia">Provincia</label><input type="text" id="pf-provincia"></div>
         <div class="fld"><label for="pf-licencias">Licencias</label><input type="text" id="pf-licencias" inputmode="numeric"></div>
-        <div class="fld"><label for="pf-status">Status</label><select id="pf-status"></select></div>
-        <div class="fld" id="pf-soft-wrap" hidden><label for="pf-soft">Otro Soft</label><input type="text" id="pf-soft" placeholder="Ej. Hudl · vence 09/2028"></div>
+        <div class="fld"><label for="pf-empresa">Empresa</label><input type="text" id="pf-empresa" list="vEmpList" placeholder="Fulcrum, HUDL, Nac Sports…"></div>
+        <div class="fld"><label for="pf-vence">Vencimiento del contrato</label><input type="date" id="pf-vence" style="font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 12px"></div>
         <div class="fld"><label for="pf-ultimo">Último contacto</label><input type="date" id="pf-ultimo" style="font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 12px"></div>
         <div class="fld"><span class="flab">Contactos</span><div id="pc-contactos"></div></div>
       </div>
@@ -1041,6 +1045,33 @@ const RESEARCH_TRIGGER="trig_01VHEKM92PTaX7ACMyn2LLDs";
 const VSTATUS=[["Clientes","--s-cer"],["Demo Piston","--s-dem"],["Presupuesto Enviado","--s-pre"],["Contacto","--s-con"],["Esp Respuesta","--s-esp"],["Buscando Info","--s-bus"],["Usan otro Soft","--s-otr"],["","--s-non"]];
 const stVar=st=>(VSTATUS.find(x=>x[0]===(st||""))||VSTATUS[VSTATUS.length-1])[1];
 const stLabel=st=>st||"Sin estado";
+/* ---- empresa contratada (reemplaza al status) ---- */
+const EMPRESAS=[["Fulcrum","--s-cer"],["HUDL","--s-otr"],["Nac Sports","--s-pre"],["MyVa","--s-dem"],["Longomatch","--s-esp"],["Catapult","--s-con"]];
+const empKey=t=>(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
+const empNorm=e=>{const t=(e||"").trim();if(!t)return "";const f=EMPRESAS.find(([n])=>empKey(n)===empKey(t));return f?f[0]:t};
+const empOf=v=>empNorm(v.empresa);
+const esFulcrum=v=>empOf(v)==="Fulcrum";
+const empVar=e=>{e=empNorm(e);if(!e)return "--s-non";const f=EMPRESAS.find(x=>x[0]===e);return f?f[1]:"--s-bus"};
+const empLabel=e=>empNorm(e)||"Sin empresa";
+const empOrden=e=>{e=empNorm(e);if(!e)return 99;const i=EMPRESAS.findIndex(x=>x[0]===e);return i<0?50:i};
+function empSelect(v){
+  const e=empOf(v), opts=[["","Sin empresa"],...EMPRESAS.map(([n])=>[n,n])];
+  if(e&&!EMPRESAS.some(x=>x[0]===e)) opts.push([e,e]);
+  if(canWrite) opts.push(["__otra","Otra (escribir)…"]);
+  return `<select class="stsel" style="--c:var(${empVar(e)})" data-empid="${esc(v.id)}" aria-label="Empresa contratada por ${esc(v.equipo)}" ${canWrite?"":"disabled"}>${opts.map(([val,lab])=>`<option value="${esc(val)}"${val===e?" selected":""}>${esc(lab)}</option>`).join("")}</select>`;
+}
+function vcCell(v){
+  const f=v.vence_contrato||"", hoy=hoyISO(), av=f?masMeses(f,-3):"";
+  const tag=f&&f<hoy?`<span class="pst bad">Vencido</span>`:av&&av<=hoy?`<span class="pst warn">Por vencer</span>`:"";
+  const inp=canWrite?`<input type="date" class="idate${f?"":" empty"}" data-id="${esc(v.id)}" data-f="vence_contrato" value="${esc(f)}" aria-label="Fecha de vencimiento del contrato de ${esc(v.equipo)}">`:(f?fmtFecha(f):`<span class="muted">—</span>`);
+  return `${inp}${tag?`<div>${tag}</div>`:""}`;
+}
+async function guardarEmpresa(id,val){
+  const v=ventas.find(x=>x.id===id); val=empNorm(val);
+  try{await db.collection("ventas").doc(id).update({empresa:val}); if(v) v.empresa=val;
+    $("vStatus").textContent=val==="Fulcrum"&&vRegion!=="clientes"?`${v?v.equipo:"El club"} ahora es cliente: lo verás en la solapa Clientes.`:"Empresa guardada.";}
+  catch{$("vStatus").textContent="No se guardó la empresa. Inténtalo de nuevo."}
+}
 let ventas=[], ventasLoaded=false, vFiltroSt=LS.get("vFiltroSt",null), vPendValid=null, confirmQuitar=false;
 function fmtFecha(iso){ if(!iso) return ""; const d=parseDate(iso); if(isNaN(d)) return esc(iso); return `${d.getDate()} ${MESES[d.getMonth()].slice(0,3)} ${String(d.getFullYear()).slice(2)}`; }
 function vId(eq,pa){ return slug(eq)+"-"+slug(pa).slice(0,12); }
@@ -1057,7 +1088,7 @@ const DEP_ORDEN=["Fútbol","Fútbol femenino","Hockey"];
 const normP=p=>(p||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
 const LATAM_SET=new Set(["argentina","brasil","brazil","paraguay","peru","chile","ecuador","bolivia","colombia","uruguay","venezuela","mexico","costa rica","panama","guatemala","honduras","el salvador","nicaragua","cuba","republica dominicana","puerto rico"]);
 const PAISES_BASE={ue:["España","Portugal","Italia"],latam:["Argentina","Brasil","Paraguay","Perú","Chile","Ecuador","Bolivia","Colombia","Uruguay","Venezuela","México"]};
-const vTabDe=v=>v.status==="Clientes"&&vVieneDeClientes?"ventas-clientes":regionDe(v)==="latam"?"ventas-latam":"ventas";
+const vTabDe=v=>esFulcrum(v)&&vVieneDeClientes?"ventas-clientes":regionDe(v)==="latam"?"ventas-latam":"ventas";
 let vVieneDeClientes=SS.get("vDeCli",false);
 const regionDe=v=>v.region==="latam"||v.region==="ue"?v.region:(LATAM_SET.has(normP(v.pais))?"latam":"ue");
 let vRegion="ue";
@@ -1067,7 +1098,7 @@ let vCollapsed=new Set((()=>{try{return JSON.parse(localStorage.getItem("vCollap
 function saveCollapsed(){try{localStorage.setItem("vCollapsed",JSON.stringify([...vCollapsed]))}catch{}}
 let vRenderPending=false, vGroupKeys=[];
 const CE=(()=>{const d=document.createElement("div");try{d.contentEditable="plaintext-only"}catch{};return d.contentEditable==="plaintext-only"?"plaintext-only":"true"})();
-const vEditing=()=>{const a=document.activeElement;return !!(a&&(($("vRows").contains(a)&&a.matches(".ic,.idate,.pdate"))||(document.getElementById("ccPanel")?.contains(a))))||!!document.getElementById("ccPanel")||!!document.getElementById("spPanel")};
+const vEditing=()=>{const a=document.activeElement;return !!(a&&(($("vRows").contains(a)&&a.matches(".ic,.idate,.pdate,.empin"))||(document.getElementById("ccPanel")?.contains(a))))||!!document.getElementById("ccPanel")||!!document.getElementById("spPanel")};
 let vDeporte=(()=>{try{return localStorage.getItem("vDeporte")||"Fútbol"}catch{return "Fútbol"}})();
 
 /* ---- contactos (un solo campo con cargo) ---- */
@@ -1158,7 +1189,7 @@ function renderVentas(){
   const latam=vRegion==="latam", cli=vRegion==="clientes";
   $("vTitulo").textContent=cli?"Clientes":latam?"Ventas LATAM":"Ventas UE";
   $("vEyebrow").textContent=cli?"Clubes que ya trabajan con Fulcrum":"Prospectos y contactos · "+(latam?"Latinoamérica":"Europa");
-  $("vSub").textContent=cli?"Los clubes que en Ventas UE o Ventas LATAM tienen el status Clientes, separados por país. Si cambias el status de un club a Clientes, aparece aquí; si se lo quitas, vuelve solo a su solapa de ventas.":"El seguimiento comercial de cada club: con quién hablamos, en qué estado está y qué sabemos de ellos. Al agregar un club, Claude investiga en internet su información relevante.";
+  $("vSub").textContent=cli?"Los clubes que en Ventas UE o Ventas LATAM tienen Fulcrum como empresa, separados por país. Si eliges Fulcrum en la columna Empresa de un club, aparece aquí; si eliges otra empresa, vuelve solo a su solapa de ventas.":"El seguimiento comercial de cada club: con quién hablamos, en qué estado está y qué sabemos de ellos. Al agregar un club, Claude investiga en internet su información relevante.";
   $("vAddForm").hidden=cli; $("vDeportes").hidden=cli; $("vStChips").hidden=cli; $("vOrdenWrap").hidden=!cli;
   if(cli) return renderClientesV(q);
   $("vPais").placeholder=latam?"Ej. Argentina":"Ej. España"; $("vEquipo").placeholder=latam?"Ej. Club Atlético Lanús":"Ej. Real Zaragoza";
@@ -1186,14 +1217,14 @@ function renderVentas(){
   $("vLigaList").innerHTML=[...new Set(enRegion.map(v=>v.liga).filter(Boolean))].sort().map(l=>`<option value="${esc(l)}">`).join("");
   const sinFiltroPais=enDep;
   // chips
-  const counts={}; sinFiltroPais.forEach(v=>{counts[v.status||""]=(counts[v.status||""]||0)+1});
+  const counts={}; sinFiltroPais.forEach(v=>{const e=empOf(v);counts[e]=(counts[e]||0)+1});
   if(ventasLoaded&&vFiltroSt!==null&&!counts[vFiltroSt]){vFiltroSt=null;LS.set("vFiltroSt",null)}
-  $("vStChips").innerHTML=VSTATUS.filter(([s])=>counts[s]).map(([s,c])=>`<button type="button" class="stchip" style="--c:var(${c})" data-st="${esc(s)}" aria-pressed="${vFiltroSt===s}">${esc(stLabel(s))}<b>${counts[s]}</b></button>`).join("");
+  $("vStChips").innerHTML=Object.keys(counts).sort((x,y)=>empOrden(x)-empOrden(y)||x.localeCompare(y)).map(e=>`<button type="button" class="stchip" style="--c:var(${empVar(e)})" data-st="${esc(e)}" aria-pressed="${vFiltroSt===e}">${esc(empLabel(e))}<b>${counts[e]}</b></button>`).join("");
   $("vStChips").querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>{vFiltroSt=vFiltroSt===b.dataset.st?null:b.dataset.st;LS.set("vFiltroSt",vFiltroSt);renderVentas()});
-  let list=sinFiltroPais.filter(v=>vFiltroSt===null||(v.status||"")===vFiltroSt);
-  if(q) list=list.filter(v=>[v.equipo,v.provincia,v.director_deportivo,v.analistas_primera,v.analista_juveniles,v.otros_contactos,v.informacion,v.liga,v.pais].join(" ").toLowerCase().includes(q));
+  let list=sinFiltroPais.filter(v=>vFiltroSt===null||empOf(v)===vFiltroSt);
+  if(q) list=list.filter(v=>[v.equipo,v.provincia,v.director_deportivo,v.analistas_primera,v.analista_juveniles,v.otros_contactos,v.informacion,v.liga,v.pais,v.empresa].join(" ").toLowerCase().includes(q));
   $("vCount").textContent=`${list.length} de ${enDep.length} club${enDep.length===1?"":"es"}`;
-  const order=s=>{const i=VSTATUS.findIndex(x=>x[0]===(s||""));return i<0?99:i};
+  const order=s=>0;
   const multiPais=new Set(list.map(v=>v.pais||"Sin país")).size>1;
   const groups={};
   list.forEach(v=>{const n=vNivel(v);const k=n+"|"+(v.pais||"Sin país")+"|"+(n===9?"Otras categorías":(v.liga||"Sin liga"));(groups[k]=groups[k]||[]).push(v)});
@@ -1201,17 +1232,17 @@ function renderVentas(){
   const cell=t=>t?esc(t).replace(/\n/g,"<br>"):`<span class="muted">—</span>`;
   vGroupKeys=keys.map(k=>vRegion+"|"+vDeporte+"|"+k);
   const ed=(v,f)=>canWrite?`<div class="ic" contenteditable="${CE}" role="textbox" aria-multiline="true" aria-label="${esc(f.replace(/_/g," "))} de ${esc(v.equipo)}" data-id="${esc(v.id)}" data-f="${f}">${esc(v[f]||"")}</div>`:cell(v[f]);
-  const SOFT="Usan otro Soft", conSoft=list.some(v=>v.status===SOFT), NC=conSoft?6:5;
-  vSetHead(conSoft);
+  const NC=6;
+  vSetHead(null);
   $("vRows").innerHTML=list.length?keys.map(k=>{const[n,pa,li]=k.split("|");
-    const rows=groups[k].sort((a,b)=>order(a.status)-order(b.status)||a.equipo.localeCompare(b.equipo));
+    const rows=groups[k].sort((a,b)=>empOrden(a.empresa)-empOrden(b.empresa)||a.equipo.localeCompare(b.equipo));
     const titulo=+n===9?`<span class="dv">Otras categorías</span>`:`<span class="dv">${esc(NIVEL_TXT(+n))}</span>${esc(li)}`;
     const gk=vRegion+"|"+vDeporte+"|"+k, abierto=!!q||!vCollapsed.has(gk);
-    return `<tr class="grp"><td colspan="${NC}"><button type="button" class="grpbtn" data-g="${esc(gk)}" aria-expanded="${abierto}"><span class="chev" aria-hidden="true">▼</span><span>${titulo}${multiPais?` · ${esc(pa)}`:""} <span style="font:500 12px var(--f-body);text-transform:none;letter-spacing:0">(${rows.length})</span></span></button></td></tr>`+(abierto?rows.map(v=>`<tr class="vrow" style="--c:var(${stVar(v.status)})">
+    return `<tr class="grp"><td colspan="${NC}"><button type="button" class="grpbtn" data-g="${esc(gk)}" aria-expanded="${abierto}"><span class="chev" aria-hidden="true">▼</span><span>${titulo}${multiPais?` · ${esc(pa)}`:""} <span style="font:500 12px var(--f-body);text-transform:none;letter-spacing:0">(${rows.length})</span></span></button></td></tr>`+(abierto?rows.map(v=>`<tr class="vrow" style="--c:var(${empVar(v.empresa)})">
       <td class="eq"><button class="linkbtn" type="button" data-pr="${esc(v.id)}">${esc(v.equipo)}</button></td>
       <td class="nw" style="white-space:nowrap">${canWrite?`<input type="date" class="idate${v.ultimo_contacto?"":" empty"}" data-id="${esc(v.id)}" data-f="ultimo_contacto" value="${esc(v.ultimo_contacto||"")}" aria-label="Último contacto con ${esc(v.equipo)}">`:(v.ultimo_contacto?fmtFecha(v.ultimo_contacto):`<span class="muted">—</span>`)}</td>
-      <td><select class="stsel" style="--c:var(${stVar(v.status)})" data-stid="${esc(v.id)}" aria-label="Status de ${esc(v.equipo)}" ${canWrite?"":"disabled"}>${VSTATUS.map(([s])=>`<option value="${esc(s)}"${(v.status||"")===s?" selected":""}>${esc(stLabel(s))}</option>`).join("")}</select></td>
-      ${conSoft?`<td class="soft">${v.status===SOFT?ed(v,"otro_soft"):""}</td>`:""}
+      <td>${empSelect(v)}</td>
+      <td class="vc" style="white-space:nowrap">${vcCell(v)}</td>
       <td class="info">${ed(v,"informacion")}</td>
       <td class="ed cct">${ccell(v)}</td></tr>`).join(""):"")}).join("")
     :`<tr><td colspan="${NC}" class="muted" style="padding:18px">${enDep.length?"Ningún club coincide con el filtro.":enRegion.length?`Todavía no hay clubes de ${esc(vDeporte)}${curP?" en "+esc(curP):""}.`:`Todavía no hay clubes en ${latam?"Ventas LATAM":"Ventas UE"}. Agrega el primero con el formulario de arriba.`}</td></tr>`;
@@ -1229,8 +1260,14 @@ function vBindRows(){
     el.addEventListener("blur",()=>{clearTimeout(t);vGuardarCelda(el)});
   });
   $("vRows").querySelectorAll(".idate").forEach(el=>{el.dataset.orig=el.value;el.addEventListener("change",()=>{el.classList.toggle("empty",!el.value);vGuardarCelda(el)});el.addEventListener("blur",()=>{if(vRenderPending)setTimeout(()=>{if(!vEditing())renderVentas()},0)})});
-  $("vRows").querySelectorAll("[data-stid]").forEach(sl=>sl.onchange=async()=>{
-    try{await db.collection("ventas").doc(sl.dataset.stid).update({status:sl.value});$("vStatus").textContent="Status guardado."}catch{$("vStatus").textContent="No se guardó el status. Inténtalo de nuevo."}
+  $("vRows").querySelectorAll("[data-empid]").forEach(sl=>sl.onchange=()=>{
+    if(sl.value!=="__otra"){guardarEmpresa(sl.dataset.empid,sl.value);return}
+    const v=ventas.find(x=>x.id===sl.dataset.empid);
+    const inp=document.createElement("input"); inp.type="text"; inp.className="empin"; inp.placeholder="Nombre de la empresa"; inp.setAttribute("aria-label","Otra empresa de "+(v?v.equipo:"")); inp.value=v&&!EMPRESAS.some(x=>x[0]===empOf(v))?empOf(v):"";
+    sl.replaceWith(inp); inp.focus(); vRenderPending=true; let done=false;
+    const fin=async ok=>{if(done)return;done=true;const t=inp.value.trim();if(ok&&t)await guardarEmpresa(sl.dataset.empid,t);inp.blur();setTimeout(()=>renderVentas(),0)};
+    inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();fin(true)}else if(e.key==="Escape"){fin(false)}});
+    inp.addEventListener("blur",()=>fin(true));
   });
 }
 const vCell=t=>t?esc(t).replace(/\n/g,"<br>"):`<span class="muted">—</span>`;
@@ -1238,8 +1275,8 @@ const vEd=(v,f)=>canWrite?`<div class="ic" contenteditable="${CE}" role="textbox
 let vOrden=LS.get("vOrden","az");
 $("vOrden").value=vOrden;
 $("vOrden").addEventListener("change",()=>{vOrden=$("vOrden").value;LS.set("vOrden",vOrden);renderVentas()});
-function vSetHead(soft,prods){const h=$("vHead"),want=(soft?"1":"")+"|"+(prods?"S|"+prods.join("|"):"");if(h.dataset.soft===want)return;h.dataset.soft=want;
-  h.innerHTML=`<th>Equipo</th><th>Último contacto</th><th>Status</th>${soft?"<th>Otro Soft</th>":""}${prods?`<th>Software contratado</th>${prods.map(pn=>`<th>${esc(pn)} · fin licencia</th>`).join("")}`:""}<th>Información</th><th>Contactos</th>`}
+function vSetHead(prods){const h=$("vHead"),want=prods?"S|"+prods.join("|"):"V";if(h.dataset.soft===want)return;h.dataset.soft=want;
+  h.innerHTML=`<th>Equipo</th><th>Último contacto</th><th>Empresa</th><th>Vencimiento</th>${prods?`<th>Software contratado</th>${prods.map(pn=>`<th>${esc(pn)} · fin licencia</th>`).join("")}`:""}<th>Información</th><th>Contactos</th>`}
 /* ---- software contratado (solapa Clientes) ---- */
 let PRODUCTOS=LS.get("productosCache",["Piston One","Piston Mac","Angles","Angles RT","Antenas"]);
 const vProds=v=>Array.isArray(v.productos)?v.productos.filter(x=>x&&x.nombre):[];
@@ -1300,7 +1337,7 @@ function bindSoftware(){
   $("vRows").querySelectorAll("[data-avreset]").forEach(b=>b.onclick=()=>{const v=ventas.find(x=>x.id===b.dataset.avreset);if(!v)return;const L=vProds(v).map(x=>({...x}));const x=L.find(y=>y.nombre===b.dataset.prod);if(x)delete x.aviso;guardarProds(v,L).then(()=>renderVentas())});
 }
 function renderClientesV(q){
-  const enRegion=ventas.filter(v=>v.status==="Clientes");
+  const enRegion=ventas.filter(esFulcrum);
   const pCount={}; enRegion.forEach(v=>{const p=v.pais||"Sin país";pCount[p]=(pCount[p]||0)+1});
   const paises=Object.keys(pCount).sort((a,b)=>a.localeCompare(b,"es"));
   let curP=vPaisSel.clientes; if(curP&&!paises.some(p=>normP(p)===normP(curP))) curP="";
@@ -1317,26 +1354,27 @@ function renderClientesV(q){
     antiguo:(a,b)=>((a.ultimo_contacto||"9999")).localeCompare(b.ultimo_contacto||"9999")||az(a,b),
     licencias:(a,b)=>num(b.licencias)-num(a.licencias)||az(a,b),
     deporte:(a,b)=>vDepOf(a).localeCompare(vDepOf(b),"es")||az(a,b),
-    vence:(a,b)=>(vProxVence(a)||"9999").localeCompare(vProxVence(b)||"9999")||az(a,b)}[vOrden]||az;
+    vence:(a,b)=>([vProxVence(a),a.vence_contrato].filter(Boolean).sort()[0]||"9999").localeCompare([vProxVence(b),b.vence_contrato].filter(Boolean).sort()[0]||"9999")||az(a,b)}[vOrden]||az;
   const groups={}; list.forEach(v=>{const p=v.pais||"Sin país";(groups[p]=groups[p]||[]).push(v)});
   const keys=Object.keys(groups).sort((a,b)=>a.localeCompare(b,"es"));
   vGroupKeys=keys.map(k=>"clientes|"+k);
   const prodCols=[...new Set([...PRODUCTOS.filter(pn=>list.some(v=>vProds(v).some(x=>x.nombre===pn))),...list.flatMap(v=>vProds(v).map(x=>x.nombre))])];
-  const NC=6+prodCols.length;
-  vSetHead(false,prodCols);
+  const NC=7+prodCols.length;
+  vSetHead(prodCols);
   $("vRows").innerHTML=list.length?keys.map(pa=>{
     const rows=groups[pa].sort(cmp), gk="clientes|"+pa, abierto=!!q||!vCollapsed.has(gk);
     return `<tr class="grp"><td colspan="${NC}"><button type="button" class="grpbtn" data-g="${esc(gk)}" aria-expanded="${abierto}"><span class="chev" aria-hidden="true">▼</span><span><span class="dv">${esc(pa)}</span> <span style="font:500 12px var(--f-body);text-transform:none;letter-spacing:0">(${rows.length})</span></span></button></td></tr>`+(abierto?rows.map(v=>{
       const meta=[v.liga||(vNivel(v)===9?"Otras categorías":""),vDepOf(v)!=="Fútbol"?vDepOf(v):"",v.licencias?"Licencias: "+v.licencias:""].filter(Boolean).join(" · ");
-      return `<tr class="vrow" style="--c:var(${stVar(v.status)})">
+      return `<tr class="vrow" style="--c:var(${empVar(v.empresa)})">
       <td class="eq"><button class="linkbtn" type="button" data-pr="${esc(v.id)}">${esc(v.equipo)}</button>${meta?`<span class="sub2">${esc(meta)}</span>`:""}</td>
       <td class="nw" style="white-space:nowrap">${canWrite?`<input type="date" class="idate${v.ultimo_contacto?"":" empty"}" data-id="${esc(v.id)}" data-f="ultimo_contacto" value="${esc(v.ultimo_contacto||"")}" aria-label="Último contacto con ${esc(v.equipo)}">`:(v.ultimo_contacto?fmtFecha(v.ultimo_contacto):`<span class="muted">—</span>`)}</td>
-      <td><select class="stsel" style="--c:var(${stVar(v.status)})" data-stid="${esc(v.id)}" aria-label="Status de ${esc(v.equipo)}" ${canWrite?"":"disabled"}>${VSTATUS.map(([s])=>`<option value="${esc(s)}"${(v.status||"")===s?" selected":""}>${esc(stLabel(s))}</option>`).join("")}</select></td>
+      <td>${empSelect(v)}</td>
+      <td class="vc" style="white-space:nowrap">${vcCell(v)}</td>
       <td class="sw">${swCell(v)}</td>
       ${prodCols.map(pn=>`<td class="pv">${pvCell(v,pn)}</td>`).join("")}
       <td class="info">${vEd(v,"informacion")}</td>
       <td class="ed cct">${ccell(v)}</td></tr>`}).join(""):"")}).join("")
-    :`<tr><td colspan="${NC}" class="muted" style="padding:18px">${enRegion.length?"Ningún cliente coincide con la búsqueda.":"Todavía no hay clientes. Cuando en Ventas UE o Ventas LATAM cambies el status de un club a Clientes, aparece aquí."}</td></tr>`;
+    :`<tr><td colspan="${NC}" class="muted" style="padding:18px">${enRegion.length?"Ningún cliente coincide con la búsqueda.":"Todavía no hay clientes. Cuando en Ventas UE o Ventas LATAM elijas Fulcrum como empresa de un club, aparece aquí."}</td></tr>`;
   vBindRows(); bindSoftware();
 }
 async function vGuardarCelda(el){
@@ -1369,7 +1407,7 @@ async function vAgregar(d){
   const dep=d.deporte||"Fútbol"; const id=vDocId(d.equipo,d.pais,dep);
   if(ventas.find(x=>x.id===id)){v.className="verdict info";v.innerHTML=`<p>Ese club ya está en ventas.</p><div class="btns"><button class="b" type="button" id="vVer">Ver ficha</button></div>`;$("vVer").onclick=()=>go("v-"+id);return}
   try{
-    await db.collection("ventas").doc(id).set({equipo:d.equipo,pais:d.pais,deporte:dep,liga:d.liga||"",nivel:nivelDeLiga(d.liga,dep),orden_liga:nivelDeLiga(d.liga,dep),provincia:d.provincia||"",licencias:"",director_deportivo:"",analistas_primera:"",analista_juveniles:"",status:"Buscando Info",ultimo_contacto:"",informacion:"",region:vRegion,creado:new Date().toISOString()});
+    await db.collection("ventas").doc(id).set({equipo:d.equipo,pais:d.pais,deporte:dep,liga:d.liga||"",nivel:nivelDeLiga(d.liga,dep),orden_liga:nivelDeLiga(d.liga,dep),provincia:d.provincia||"",licencias:"",director_deportivo:"",analistas_primera:"",analista_juveniles:"",empresa:"",ultimo_contacto:"",informacion:"",region:vRegion,creado:new Date().toISOString()});
     $("vEquipo").value="";$("vPais").value="";$("vLiga").value="";if(vDeporte!==dep){vDeporte=dep;try{localStorage.setItem("vDeporte",dep)}catch{}}v.hidden=true;vPendValid=null;
     go("v-"+id);
     pedirInvestigacion(id,d.equipo);
@@ -1408,13 +1446,11 @@ Si no existe o es ambiguo, valido=false y hasta 3 sugerencias reales parecidas.`
 });
 
 /* ---- ficha de prospecto ---- */
-const PF=[["equipo","pf-equipo"],["pais","pf-pais"],["deporte","pf-deporte"],["liga","pf-liga"],["nivel","pf-nivel"],["provincia","pf-provincia"],["licencias","pf-licencias"],["status","pf-status"],["otro_soft","pf-soft"],["ultimo_contacto","pf-ultimo"],["informacion","pf-info"]];
+const PF=[["equipo","pf-equipo"],["pais","pf-pais"],["deporte","pf-deporte"],["liga","pf-liga"],["nivel","pf-nivel"],["provincia","pf-provincia"],["licencias","pf-licencias"],["empresa","pf-empresa"],["vence_contrato","pf-vence"],["ultimo_contacto","pf-ultimo"],["informacion","pf-info"]];
 let pLoaded=null;
 function renderProspect(v){
   $("pNombre").textContent=v.equipo; $("pBack").textContent={"ventas-clientes":"← Clientes","ventas-latam":"← Ventas LATAM","ventas":"← Ventas UE"}[vTabDe(v)]; $("pPais").textContent=[v.provincia,v.pais].filter(Boolean).join(" · ");
-  $("pLiga").innerHTML=`${esc(vDepOf(v))} · ${esc(NIVEL_TXT(vNivel(v)))}${v.liga?" · "+esc(v.liga):""} · <span class="stchip" style="--c:var(${stVar(v.status)});cursor:default">${esc(stLabel(v.status))}</span>`;
-  const softSync=()=>{$("pf-soft-wrap").hidden=$("pf-status").value!=="Usan otro Soft"}; $("pf-status").onchange=softSync; setTimeout(softSync,0);
-  $("pf-status").innerHTML=VSTATUS.map(([s])=>`<option value="${esc(s)}">${esc(stLabel(s))}</option>`).join("");
+  $("pLiga").innerHTML=`${esc(vDepOf(v))} · ${esc(NIVEL_TXT(vNivel(v)))}${v.liga?" · "+esc(v.liga):""} · <span class="stchip" style="--c:var(${empVar(v.empresa)});cursor:default">${esc(empLabel(v.empresa))}</span>`;
   const editing=$("vProspect").contains(document.activeElement)&&document.activeElement.closest("#pForm");
   if(pLoaded!==v.id||!editing){ PF.forEach(([k,id])=>{$(id).value=k==="nivel"?String(vNivel(v)):k==="deporte"?vDepOf(v):(v[k]??"")}); pLoaded=v.id; }
   PF.forEach(([,id])=>{$(id).disabled=!canWrite});
@@ -1445,7 +1481,7 @@ $("pBack").onclick=()=>{const v=ventas.find(x=>x.id===(current||"").slice(2));go
 $("pForm").addEventListener("submit",async e=>{
   e.preventDefault(); const id=current.slice(2); const patch={};
   PF.forEach(([k,fid])=>{patch[k]=$(fid).value.trim()});
-  patch.nivel=Number.isFinite(+patch.nivel)&&patch.nivel!==""?+patch.nivel:9; patch.orden_liga=patch.nivel; patch.deporte=patch.deporte||"Fútbol";
+  patch.nivel=Number.isFinite(+patch.nivel)&&patch.nivel!==""?+patch.nivel:9; patch.orden_liga=patch.nivel; patch.deporte=patch.deporte||"Fútbol"; if("empresa" in patch) patch.empresa=empNorm(patch.empresa);
   try{await db.collection("ventas").doc(id).update(patch);$("pStatus").textContent="Guardado.";pLoaded=null}catch{$("pStatus").textContent="No se guardó. Inténtalo de nuevo."}
 });
 async function pedirInvestigacion(id,nombre){
@@ -1460,7 +1496,7 @@ $("pQuitar").onclick=async()=>{const id=current.slice(2);if(!confirmQuitar){conf
 $("pACliente").onclick=async()=>{const v=ventas.find(x=>x.id===current.slice(2));if(!v)return;const cid=vDocId(v.equipo,v.pais,v.deporte);
   if(clientes.find(c=>c.id===cid)){go(cid);return}
   try{await db.collection("clientes").doc(cid).set({nombre:v.equipo,pais:v.pais,liga:v.liga||v.investigacion?.liga_actual||"",ciudad:v.investigacion?.ciudad||v.provincia||"",tareas:{semanal:true,diario:true,recordatorio:true,partido:true},idioma:"es",creado:new Date().toISOString()});
-    await db.collection("ventas").doc(v.id).update({status:"Clientes"});
+    await db.collection("ventas").doc(v.id).update({empresa:"Fulcrum"});
     go(cid); pedirBusqueda({id:cid,nombre:v.equipo,pais:v.pais});
   }catch{$("pToolStatus").textContent="No se pudo pasar a clientes."}};
 
