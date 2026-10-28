@@ -273,6 +273,7 @@ footer{font-size:13px;color:var(--muted)}
 #ccPanel li .ac button:hover,#spPanel li .ac button:hover{color:var(--fg);background:var(--surface)}
 #ccPanel li .ac button:focus-visible,#spPanel li .ac button:focus-visible{outline:2px solid var(--accent)}
 #ccPanel form,#spPanel form{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+#ccCargoNuevo[hidden]{display:none!important}
 #ccPanel form input,#spPanel form input{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;box-sizing:border-box}
 #ccPanel form .row,#spPanel form .row{display:flex;gap:8px;justify-content:flex-end;align-items:center}
 #ccPanel .empty2,#spPanel .empty2{font-size:14px;color:var(--muted)}
@@ -379,7 +380,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,syst
       <h2>Seguimiento <small id="vCount"></small></h2>
       <div class="seg sportbar paisbar" id="vPaises" role="group" aria-label="País"></div>
       <div class="seg sportbar" id="vDeportes" role="group" aria-label="Deporte"></div>
-      <datalist id="vDepList"></datalist><datalist id="vEmpList"><option value="Fulcrum"><option value="HUDL"><option value="Nac Sports"><option value="MyVa"><option value="Longomatch"><option value="Catapult"></datalist><datalist id="vLigaList"></datalist>
+      <datalist id="vDepList"></datalist><datalist id="vEmpList"><option value="Fulcrum"><option value="HUDL"><option value="Nacsports"><option value="MyVa"><option value="Longomatch"><option value="Catapult"></datalist><datalist id="vLigaList"></datalist>
       <div class="vt-filters">
         <input type="text" id="vBuscar" placeholder="Buscar club, persona o nota" aria-label="Buscar">
         
@@ -413,7 +414,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body,syst
         <div class="fld"><label for="pf-nivel">División</label><select id="pf-nivel"><option value="0">Federación</option><option value="1">1ª división</option><option value="2">2ª división</option><option value="3">3ª división</option><option value="9">Otras categorías</option></select></div>
         <div class="fld"><label for="pf-provincia">Provincia</label><input type="text" id="pf-provincia"></div>
         <div class="fld"><label for="pf-licencias">Licencias</label><input type="text" id="pf-licencias" inputmode="numeric"></div>
-        <div class="fld"><label for="pf-empresa">Empresa</label><input type="text" id="pf-empresa" list="vEmpList" placeholder="Fulcrum, HUDL, Nac Sports…"></div>
+        <div class="fld"><label for="pf-empresa">Empresa</label><input type="text" id="pf-empresa" list="vEmpList" placeholder="Fulcrum, HUDL, Nacsports…"></div>
         <div class="fld"><label for="pf-vence">Vencimiento del contrato</label><input type="date" id="pf-vence" style="font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 12px"></div>
         <div class="fld"><label for="pf-ultimo">Último contacto</label><input type="date" id="pf-ultimo" style="font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 12px"></div>
         <div class="fld"><span class="flab">Contactos</span><div id="pc-contactos"></div></div>
@@ -1046,7 +1047,7 @@ const VSTATUS=[["Clientes","--s-cer"],["Demo Piston","--s-dem"],["Presupuesto En
 const stVar=st=>(VSTATUS.find(x=>x[0]===(st||""))||VSTATUS[VSTATUS.length-1])[1];
 const stLabel=st=>st||"Sin estado";
 /* ---- empresa contratada (reemplaza al status) ---- */
-const EMPRESAS=[["Fulcrum","--e-ful"],["HUDL","--e-hudl"],["Nac Sports","--e-nac"],["MyVa","--e-myva"],["Longomatch","--e-lon"],["Catapult","--e-cat"]];
+const EMPRESAS=[["Fulcrum","--e-ful"],["HUDL","--e-hudl"],["Nacsports","--e-nac"],["MyVa","--e-myva"],["Longomatch","--e-lon"],["Catapult","--e-cat"]];
 const empKey=t=>(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
 const empNorm=e=>{const t=(e||"").trim();if(!t)return "";const f=EMPRESAS.find(([n])=>empKey(n)===empKey(t));return f?f[0]:t};
 const empOf=v=>empNorm(v.empresa);
@@ -1103,7 +1104,12 @@ let vDeporte=(()=>{try{return localStorage.getItem("vDeporte")||"Fútbol"}catch{
 
 /* ---- contactos (un solo campo con cargo) ---- */
 const CFIELDS=["director_deportivo","analistas_primera","analista_juveniles"];
-const CARGOS=["Director deportivo","Analista primera","Analista juveniles","Entrenador","Otro"];
+const CARGOS_BASE=["Director deportivo","Entrenador principal","Entrenador asistente","Analista primera","Analista juveniles"];
+let CARGOS_EXTRA=LS.get("cargosCache",[]);
+let CARGOS=[...CARGOS_BASE,...CARGOS_EXTRA,"Otro"];
+function setCargos(extra){CARGOS_EXTRA=extra.filter(x=>x&&!CARGOS_BASE.includes(x)&&x!=="Otro");CARGOS=[...CARGOS_BASE,...CARGOS_EXTRA,"Otro"];LS.set("cargosCache",CARGOS_EXTRA)}
+function setupCargos(){db.doc("config/cargos").onSnapshot(s=>{const l=s.data()?.lista;if(Array.isArray(l)){setCargos(l);if($("ccPanel")&&!$("ccPanel").contains(document.activeElement))pintarContactos()}},()=>{})}
+async function agregarCargo(c){if(CARGOS.includes(c))return;const L=[...CARGOS_EXTRA,c];setCargos(L);try{await db.doc("config/cargos").set({lista:L})}catch{}}
 const CARGO_DE={director_deportivo:"Director deportivo",analistas_primera:"Analista primera",analista_juveniles:"Analista juveniles"};
 function vContactos(v){
   if(Array.isArray(v.contactos_lista)) return v.contactos_lista.filter(c=>c&&(c.nombre||c.telefono||c.email));
@@ -1150,7 +1156,8 @@ function pintarContactos(){
       ${canWrite?`<span class="ac"><button type="button" data-ce="${i}" aria-label="Editar ${esc(c.nombre)}">✎</button><button type="button" data-cd="${i}" aria-label="Quitar ${esc(c.nombre)}">×</button></span>`:""}</li>`).join("")}</ul>`:`<div class="empty2">Todavía no hay contactos.</div>`}
     ${canWrite?`<form id="ccForm" autocomplete="off">
       <input id="ccNombre" placeholder="Nombre" value="${esc(e?.nombre||"")}" aria-label="Nombre">
-      <select id="ccCargo" aria-label="Cargo">${CARGOS.map(k=>`<option${k===cargoSel?" selected":""}>${k}</option>`).join("")}</select>
+      <select id="ccCargo" aria-label="Cargo">${CARGOS.map(k=>`<option${k===cargoSel?" selected":""}>${esc(k)}</option>`).join("")}<option value="__nuevo">+ Nuevo cargo…</option></select>
+      <input id="ccCargoNuevo" placeholder="Nombre del nuevo cargo (queda para todos)" aria-label="Nuevo cargo" hidden>
       <input id="ccTel" type="tel" placeholder="Teléfono" value="${esc(e?.telefono||"")}" aria-label="Teléfono">
       <input id="ccMail" type="email" placeholder="Email (opcional)" value="${esc(e?.email||"")}" aria-label="Email">
       <div class="row"><span class="status" id="ccStatus"></span>${e?`<button class="b" type="button" id="ccCancel">Cancelar</button>`:""}<button class="b primary" type="submit">${e?"Guardar":"Agregar"}</button></div>
@@ -1158,8 +1165,11 @@ function pintarContactos(){
   p.querySelectorAll("[data-ce]").forEach(b=>b.onclick=()=>{ccOpen.edit=+b.dataset.ce;pintarContactos();$("ccNombre").focus()});
   p.querySelectorAll("[data-cd]").forEach(b=>b.onclick=()=>{const L2=vContactos(v).filter((_,i)=>i!==+b.dataset.cd);ccOpen.edit=-1;guardarContactos(v,L2)});
   const c=$("ccCancel"); if(c) c.onclick=()=>{ccOpen.edit=-1;pintarContactos()};
+  const cs=$("ccCargo"); if(cs) cs.onchange=()=>{const nv=$("ccCargoNuevo");nv.hidden=cs.value!=="__nuevo";if(!nv.hidden)nv.focus()};
   const fm=$("ccForm"); if(fm) fm.onsubmit=ev=>{ev.preventDefault();
     let cargo=$("ccCargo").value; if(cargo==="Otro"&&e?.cargo&&!CARGOS.includes(e.cargo)) cargo=e.cargo;
+    if(cargo==="__nuevo"){cargo=$("ccCargoNuevo").value.trim().replace(/\s+/g," ");if(!cargo){$("ccCargoNuevo").focus();return}
+      const ya=CARGOS.find(k=>k.toLowerCase()===cargo.toLowerCase()); if(ya) cargo=ya; else agregarCargo(cargo);}
     const n={nombre:$("ccNombre").value.trim(),cargo,telefono:$("ccTel").value.trim(),email:$("ccMail").value.trim()};
     if(!n.nombre&&!n.telefono&&!n.email){$("ccNombre").focus();return}
     const L2=[...vContactos(v)]; if(ccOpen.edit>=0) L2[ccOpen.edit]=n; else L2.push(n);
@@ -1548,6 +1558,7 @@ $("userForm").addEventListener("submit",async e=>{e.preventDefault();
   if(!isAdmin) $("btnRemove").hidden=true;
   if(isAdmin) setupMail();
   if(canWrite) setupProductos();
+  if(canWrite) setupCargos();
   cargarUsuarios();
   if(isOwner){ touch(); document.addEventListener("click",touch,{passive:true}); document.addEventListener("visibilitychange",()=>{if(!document.hidden)touch()}); }
   if(canWrite) $("btnUpdate").hidden=false;
