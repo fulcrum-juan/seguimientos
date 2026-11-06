@@ -286,6 +286,12 @@ footer{font-size:13px;color:var(--muted)}
 .stchip[aria-pressed="true"]{background:var(--c);color:var(--bg);border-color:var(--c)}
 .stchip b{font-variant-numeric:tabular-nums;margin-left:4px}
 .vtable{border-collapse:collapse;width:100%;min-width:1000px;font-size:13.5px}
+.vtable th .thsort{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;border-radius:4px}
+.vtable th .thsort:hover{color:var(--fg)}
+.vtable th .thsort:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.vtable th .si{font-size:10px;opacity:.45}
+.vtable th[aria-sort="ascending"] .thsort,.vtable th[aria-sort="descending"] .thsort{color:var(--accent)}
+.vtable th[aria-sort="ascending"] .si,.vtable th[aria-sort="descending"] .si{opacity:1}
 .vtable th{font:600 11px/1.3 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:bottom;position:sticky;top:0;background:var(--surface)}
 .vtable td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 .vtable tr.vrow td:first-child{border-left:4px solid var(--c,var(--s-non))}
@@ -1245,7 +1251,7 @@ function renderVentas(){
   const NC=6;
   vSetHead(null);
   $("vRows").innerHTML=list.length?keys.map(k=>{const[n,pa,li]=k.split("|");
-    const rows=groups[k].sort((a,b)=>empOrden(a.empresa)-empOrden(b.empresa)||a.equipo.localeCompare(b.equipo));
+    const rows=groups[k].sort(vSortCmp()||((a,b)=>empOrden(a.empresa)-empOrden(b.empresa)||a.equipo.localeCompare(b.equipo)));
     const titulo=+n===9?`<span class="dv">Otras categorías</span>`:`<span class="dv">${esc(NIVEL_TXT(+n))}</span>${esc(li)}`;
     const gk=vRegion+"|"+vDeporte+"|"+k, abierto=!!q||!vCollapsed.has(gk);
     return `<tr class="grp"><td colspan="${NC}"><button type="button" class="grpbtn" data-g="${esc(gk)}" aria-expanded="${abierto}"><span class="chev" aria-hidden="true">▼</span><span>${titulo}${multiPais?` · ${esc(pa)}`:""} <span style="font:500 12px var(--f-body);text-transform:none;letter-spacing:0">(${rows.length})</span></span></button></td></tr>`+(abierto?rows.map(v=>`<tr class="vrow" style="--c:var(${empVar(v.empresa)})">
@@ -1284,9 +1290,37 @@ const vCell=t=>t?esc(t).replace(/\n/g,"<br>"):`<span class="muted">—</span>`;
 const vEd=(v,f)=>canWrite?`<div class="ic" contenteditable="${CE}" role="textbox" aria-multiline="true" aria-label="${esc(f.replace(/_/g," "))} de ${esc(v.equipo)}" data-id="${esc(v.id)}" data-f="${f}">${esc(v[f]||"")}</div>`:vCell(v[f]);
 let vOrden=LS.get("vOrden","az");
 $("vOrden").value=vOrden;
-$("vOrden").addEventListener("change",()=>{vOrden=$("vOrden").value;LS.set("vOrden",vOrden);renderVentas()});
-function vSetHead(prods){const h=$("vHead"),want=prods?"S|"+prods.join("|"):"V";if(h.dataset.soft===want)return;h.dataset.soft=want;
-  h.innerHTML=`<th>Equipo</th><th>Último contacto</th><th>Empresa</th><th>Vencimiento</th>${prods?`<th>Software contratado</th>${prods.map(pn=>`<th>${esc(pn)} · fin licencia</th>`).join("")}`:""}<th>Información</th><th>Contactos</th>`}
+$("vOrden").addEventListener("change",()=>{vOrden=$("vOrden").value;LS.set("vOrden",vOrden);vSort=null;LS.set("vSort",null);renderVentas()});
+let vSort=LS.get("vSort",null); // {k,dir}
+function vSortCmp(){
+  if(!vSort) return null;
+  const k=vSort.k, d=vSort.dir==="desc"?-1:1;
+  const val=v=>{
+    if(k==="equipo") return v.equipo||"";
+    if(k==="ultimo") return v.ultimo_contacto||"";
+    if(k==="empresa") return empOf(v);
+    if(k==="vence") return v.vence_contrato||"";
+    if(k==="info") return (v.informacion||"").trim();
+    if(k==="contactos") return vContactos(v).length||"";
+    if(k==="software") return vProds(v).reduce((a,x)=>a+(+x.cantidad||1),0)||"";
+    if(k.startsWith("p:")) return (vProds(v).find(x=>x.nombre===k.slice(2))||{}).vence||"";
+    return "";
+  };
+  return (a,b)=>{const x=val(a),y=val(b);
+    if(x===""&&y==="") return (a.equipo||"").localeCompare(b.equipo||"","es");
+    if(x==="") return 1; if(y==="") return -1;
+    const r=typeof x==="number"&&typeof y==="number"?x-y:String(x).localeCompare(String(y),"es",{numeric:true,sensitivity:"base"});
+    return r*d||(a.equipo||"").localeCompare(b.equipo||"","es")};
+}
+function vSetHead(prods){const h=$("vHead"),want=(prods?"S|"+prods.join("|"):"V")+"|"+(vSort?vSort.k+vSort.dir:"");if(h.dataset.soft===want)return;h.dataset.soft=want;
+  const th=(k,t)=>{const on=vSort&&vSort.k===k, dir=on?vSort.dir:"";
+    return `<th aria-sort="${on?(dir==="asc"?"ascending":"descending"):"none"}"><button type="button" class="thsort" data-sort="${esc(k)}" title="Ordenar por ${esc(t)}">${esc(t)}<span class="si" aria-hidden="true">${on?(dir==="asc"?"▲":"▼"):"↕"}</span></button></th>`};
+  h.innerHTML=th("equipo","Equipo")+th("ultimo","Último contacto")+th("empresa","Empresa")+th("vence","Vencimiento")+(prods?th("software","Software contratado")+prods.map(pn=>th("p:"+pn,pn+" · fin licencia")).join(""):"")+th("info","Información")+th("contactos","Contactos");
+  h.querySelectorAll("[data-sort]").forEach(b=>b.onclick=()=>{const k=b.dataset.sort;
+    vSort=!vSort||vSort.k!==k?{k,dir:"asc"}:vSort.dir==="asc"?{k,dir:"desc"}:null;
+    LS.set("vSort",vSort); renderVentas();
+    const nb=$("vHead").querySelector(`[data-sort="${CSS.escape(k)}"]`); if(nb) nb.focus()});
+}
 /* ---- software contratado (solapa Clientes) ---- */
 let PRODUCTOS=LS.get("productosCache",["Piston One","Piston Mac","Angles","Angles RT","Antenas"]);
 const vProds=v=>Array.isArray(v.productos)?v.productos.filter(x=>x&&x.nombre):[];
@@ -1372,7 +1406,7 @@ function renderClientesV(q){
   const NC=7+prodCols.length;
   vSetHead(prodCols);
   $("vRows").innerHTML=list.length?keys.map(pa=>{
-    const rows=groups[pa].sort(cmp), gk="clientes|"+pa, abierto=!!q||!vCollapsed.has(gk);
+    const rows=groups[pa].sort(vSortCmp()||cmp), gk="clientes|"+pa, abierto=!!q||!vCollapsed.has(gk);
     return `<tr class="grp"><td colspan="${NC}"><button type="button" class="grpbtn" data-g="${esc(gk)}" aria-expanded="${abierto}"><span class="chev" aria-hidden="true">▼</span><span><span class="dv">${esc(pa)}</span> <span style="font:500 12px var(--f-body);text-transform:none;letter-spacing:0">(${rows.length})</span></span></button></td></tr>`+(abierto?rows.map(v=>{
       const meta=[v.liga||(vNivel(v)===9?"Otras categorías":""),vDepOf(v)!=="Fútbol"?vDepOf(v):"",v.licencias?"Licencias: "+v.licencias:""].filter(Boolean).join(" · ");
       return `<tr class="vrow" style="--c:var(${empVar(v.empresa)})">
