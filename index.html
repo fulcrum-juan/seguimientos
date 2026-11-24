@@ -1068,7 +1068,7 @@ function empSelect(v){
   return `<select class="stsel" style="--c:var(${empVar(e)})" data-empid="${esc(v.id)}" aria-label="Empresa contratada por ${esc(v.equipo)}" ${canWrite?"":"disabled"}>${opts.map(([val,lab])=>`<option value="${esc(val)}"${val===e?" selected":""}>${esc(lab)}</option>`).join("")}</select>`;
 }
 function vcCell(v){
-  const f=v.vence_contrato||"", hoy=hoyISO(), av=f?masMeses(f,-3):"";
+  const f=v.vence_contrato||"", hoy=hoyISO(), av=f?masMeses(f,-5):"";
   const tag=f&&f<hoy?`<span class="pst bad">Vencido</span>`:av&&av<=hoy?`<span class="pst warn">Por vencer</span>`:"";
   const inp=canWrite?`<input type="date" class="idate${f?"":" empty"}" data-id="${esc(v.id)}" data-f="vence_contrato" value="${esc(f)}" aria-label="Fecha de vencimiento del contrato de ${esc(v.equipo)}">`:(f?fmtFecha(f):`<span class="muted">—</span>`);
   return `${inp}${tag?`<div>${tag}</div>`:""}`;
